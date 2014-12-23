@@ -9,8 +9,8 @@
     "start": "node app.js",
     "pretest": "rm -rf docs && rm -rf coverage && docco neo4j.js",
     "test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec test/*.test.js",
-    "functional-test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec",
-    "posttest": "istanbul report html"
+    "posttest": "istanbul report html",
+    "functional-test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec"
   },
   "homepage": "https://github.com/RainBirdAi/rainbird-neo4j",
   "repository": {
