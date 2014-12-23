@@ -1,0 +1,5 @@
+{
+    "includeFiles": ["neo4j.js", "test/"],
+    "excludeFiles": [],
+    "lintOnly": ["test/"]
+}
