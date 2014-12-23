@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var Neo4j = require('../neo4j.js');
 
-describe('Neo4j wrapper', function() {
+describe('Neo4j wrapper, when querying the database', function() {
 
     var db;
 
@@ -13,7 +13,7 @@ describe('Neo4j wrapper', function() {
         db.query('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r', done);
     });
 
-    it('Should run a simple query with no parameters', function(done) {
+    it('should run a simple query with no parameters', function(done) {
         db.query('CREATE (n)', function(err, results) {
             expect(err).to.not.be.ok();
             expect(results).to.be.an('array');
@@ -31,7 +31,7 @@ describe('Neo4j wrapper', function() {
         });
     });
 
-    it('Should run a single query with parameters', function(done) {
+    it('should run a single query with parameters', function(done) {
         db.query(
             'CREATE (n {value: {value}}) return n', { 'value': 'param'},
             function(err, results) {
@@ -59,7 +59,7 @@ describe('Neo4j wrapper', function() {
         );
     });
 
-    it('Should run a batch of queries', function(done) {
+    it('should run a batch of queries', function(done) {
         var queries = [
             { 'statement': 'CREATE(:Foo)', 'parameters': {} },
             { 'statement': 'CREATE(:Bar)', 'parameters': {} },
@@ -104,7 +104,7 @@ describe('Neo4j wrapper', function() {
         });
     });
 
-    it('Should fail quietly with bad queries', function(done) {
+    it('should fail quietly with bad queries', function(done) {
         db.query('Duff query', {}, function(err, results) {
             expect(err).to.not.be.ok();
             expect(results).to.be.an('array');
@@ -113,7 +113,7 @@ describe('Neo4j wrapper', function() {
         });
     });
 
-    it('Should pass errors through', function(done) {
+    it('should pass errors through', function(done) {
         var error = new Neo4j('does not exist');
         error.query('barf and die', {}, function(err, results) {
             expect(err).to.be.ok();
