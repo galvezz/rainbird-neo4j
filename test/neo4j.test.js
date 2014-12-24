@@ -9,13 +9,15 @@ describe('Neo4j wrapper', function() {
         var db;
 
         before(function(done) {
-            var mock = {
-                'post': function(args, callback) {
-                    callback(null, { 'body': { 'results': args } });
-                }
-            };
+            Neo4j.__set__({
+                'request': {
+                    'post': function(args, callback) {
+                        callback(null, { 'body': { 'results': args } });
+                    }
+                },
+                'mapResults': function(results) { return results; }
+            });
 
-            Neo4j.__set__('request', mock);
             db = new Neo4j('http://localhost:7474');
 
             done();
@@ -109,7 +111,8 @@ describe('Neo4j wrapper', function() {
 
             db.query('test', function(err, results) {
                 expect(err).to.equal('Error');
-                expect(results).to.be.undefined();
+                expect(results).to.be.an('array');
+                expect(results).to.be.empty();
 
                 done();
             });
@@ -188,6 +191,108 @@ describe('Neo4j wrapper', function() {
                 'MATCH (n {value: {value}) RETURN n');
             expect(statement).to.have.property('parameters');
             expect(statement.parameters).to.have.property('value', 'foo');
+            done();
+        });
+    });
+
+    describe('result mapper', function() {
+        var mapResults = Neo4j.__get__('mapResults');
+
+        it('should map rows to columns', function(done) {
+            var data = [
+                {
+                    'columns': ['foo', 'bar'],
+                    'data': [
+                        {
+                            'row': [
+                                { 'type': 'String', 'value': 'one' },
+                                { 'type': 'String', 'value': 'two' }
+                            ]
+                        }
+                    ]
+                }
+            ];
+
+            var results = mapResults(data);
+
+            expect(results).to.be.an('array');
+            expect(results).to.have.length(1);
+
+            expect(results[0]).to.be.an('array');
+            expect(results[0]).to.have.length(2);
+
+            expect(results[0][0]).to.have.property('foo');
+            expect(results[0][0].foo).to.have.property('type', 'String');
+            expect(results[0][0].foo).to.have.property('value', 'one');
+
+            expect(results[0][1]).to.have.property('bar');
+            expect(results[0][1].bar).to.have.property('type', 'String');
+            expect(results[0][1].bar).to.have.property('value', 'two');
+
+           done(); 
+        });
+
+        it('should handle complex results', function(done) {
+            var data = [
+                {
+                    'columns': ['foo'],
+                    'data': [{ 'row': [{ 'type': 'String', 'value': 'one' }] }]
+                },
+                {
+                    'columns': ['bar'],
+                    'data': [{ 'row': [{ 'value': 'one' }] }]
+                },
+                {
+                    'columns': ['baz'],
+                    'data': [
+                        { 'row': [{ 'type': 'String', 'value': 'one' }] },
+                        { 'row': [{ 'type': 'String', 'value': 'two' }] },
+                        { 'row': [{ 'value': 'three' }] }
+                    ]
+                }
+            ];
+
+            var results = mapResults(data);
+
+            expect(results).to.be.an('array');
+            expect(results).to.have.length(3);
+
+            expect(results[0]).to.be.an('array');
+            expect(results[0]).to.have.length(1);
+
+            expect(results[0][0]).to.have.property('foo');
+            expect(results[0][0].foo).to.have.property('type', 'String');
+            expect(results[0][0].foo).to.have.property('value', 'one');
+
+            expect(results[1]).to.be.an('array');
+            expect(results[1]).to.have.length(1);
+
+            expect(results[1][0]).to.have.property('bar');
+            expect(results[1][0].bar).to.have.property('value', 'one');
+
+            expect(results[2]).to.be.an('array');
+            expect(results[2]).to.have.length(3);
+
+            expect(results[2][0]).to.have.property('baz');
+            expect(results[2][0].baz).to.have.property('type', 'String');
+            expect(results[2][0].baz).to.have.property('value', 'one');
+
+            expect(results[2][1]).to.have.property('baz');
+            expect(results[2][1].baz).to.have.property('type', 'String');
+            expect(results[2][1].baz).to.have.property('value', 'two');
+
+            expect(results[2][2]).to.have.property('baz');
+            expect(results[2][2].baz).to.have.property('value', 'three');
+
+            done();
+        });
+
+        it('should return an empty array on error', function(done) {
+            var results = mapResults('invalid results');
+
+            expect(results).to.be.an('array');
+            expect(results).to.be.empty();
+
             done();
         });
     });
