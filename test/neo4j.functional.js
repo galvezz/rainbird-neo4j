@@ -12,20 +12,15 @@ describe('Neo4j wrapper, when querying the database', function() {
 
         db.query('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r', done);
     });
-
+    
     it('should run a simple query with no parameters', function(done) {
         db.query('CREATE (n)', function(err, results) {
             expect(err).to.not.be.ok();
             expect(results).to.be.an('array');
             expect(results).to.have.length(1);
-            expect(results[0]).to.have.property('columns');
-            expect(results[0]).to.have.property('data');
 
-            expect(results[0].columns).to.be.an('array');
-            expect(results[0].columns).have.length(0);
-
-            expect(results[0].data).to.be.an('array');
-            expect(results[0].data).to.have.length(0);
+            expect(results[0]).to.be.an('array');
+            expect(results[0]).to.have.length(0);
 
             done();
         });
@@ -38,21 +33,15 @@ describe('Neo4j wrapper, when querying the database', function() {
                 expect(err).to.not.be.ok();
                 expect(results).to.be.an('array');
                 expect(results).to.have.length(1);
-                expect(results[0]).to.have.property('columns');
-                expect(results[0]).to.have.property('data');
 
-                expect(results[0].columns).to.be.an('array');
-                expect(results[0].columns).have.length(1);
-                expect(results[0].columns[0]).to.equal('n');
-                expect(results[0].data).to.be.an('array');
-                expect(results[0].data).to.have.length(1);
-                expect(results[0].data[0]).to.have.property('row');
+                expect(results[0]).to.be.an('array');
+                expect(results[0]).to.have.length(1);
 
-                var rows = results[0].data[0].row;
+                expect(results[0][0]).to.have.property('n');
 
-                expect(rows).to.be.an('array');
-                expect(rows).to.have.length(1);
-                expect(rows[0]).to.have.property('value', 'param');
+                var data = results[0][0].n;
+
+                expect(data).to.have.property('value', 'param');
 
                 done();
             }
@@ -64,7 +53,7 @@ describe('Neo4j wrapper, when querying the database', function() {
             { 'statement': 'CREATE(:Foo)', 'parameters': {} },
             { 'statement': 'CREATE(:Bar)', 'parameters': {} },
             {
-                'statement': 'CREATE (s:Test)-[r:Test]->(s:Test) RETURN r',
+                'statement': 'CREATE (s:Foo)-[r:Foo]->(o:Foo) RETURN s, r, o',
                 'parameters': {}
             }
 
@@ -74,31 +63,24 @@ describe('Neo4j wrapper, when querying the database', function() {
             expect(err).to.not.be.ok();
             expect(results).to.be.an('array');
             expect(results).to.have.length(3);
-            expect(results[0]).to.have.property('columns');
-            expect(results[0]).to.have.property('data');
 
-            expect(results[0].columns).to.be.an('array');
-            expect(results[0].columns).have.length(0);
-            expect(results[0].data).to.be.an('array');
-            expect(results[0].data).to.have.length(0);
+            expect(results[0]).to.be.an('array');
+            expect(results[0]).to.have.length(0);
 
-            expect(results[1].columns).to.be.an('array');
-            expect(results[1].columns).have.length(0);
-            expect(results[1].data).to.be.an('array');
-            expect(results[1].data).to.have.length(0);
+            expect(results[1]).to.be.an('array');
+            expect(results[1]).to.have.length(0);
 
-            expect(results[2].columns).to.be.an('array');
-            expect(results[2].columns).have.length(1);
-            expect(results[2].columns[0]).to.equal('r');
-            expect(results[2].data).to.be.an('array');
-            expect(results[2].data).to.have.length(1);
-            expect(results[2].data[0]).to.have.property('row');
+            expect(results[2]).to.be.an('array');
+            expect(results[2]).to.have.length(3);
 
-            var rows = results[2].data[0].row;
+            expect(results[2][0]).to.have.property('s');
+            expect(results[2][0].s).to.be.empty();
 
-            expect(rows).to.be.an('array');
-            expect(rows).to.have.length(1);
-            expect(rows[0]).to.be.empty();
+            expect(results[2][1]).to.have.property('r');
+            expect(results[2][1].r).to.be.empty();
+
+            expect(results[2][2]).to.have.property('o');
+            expect(results[2][2].o).to.be.empty();
 
             done();
         });
@@ -117,7 +99,8 @@ describe('Neo4j wrapper, when querying the database', function() {
         var error = new Neo4j('does not exist');
         error.query('barf and die', {}, function(err, results) {
             expect(err).to.be.ok();
-            expect(results).to.not.be.ok();
+            expect(results).to.be.an('array');
+            expect(results).to.be.empty();
             done();
         });
 
