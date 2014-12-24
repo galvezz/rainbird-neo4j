@@ -1,14 +1,12 @@
 var request = require('request');
 
-var neo4j;
-
 // The Rainbird Neo4j package gives a very thin wrapper around the Neo4J REST
 // API and exposes this as an object. When you instantiate a new Neo4j object 
 // you need to tell it where Neo4j lives. The URI will be something along the 
 // lines of `http://localhost:7474`.
 
 function Neo4j(uri) {
-    neo4j = uri;
+    this.neo4j = uri;
 }
 
 // Results from the Neo4j REST API aren't in the best format and the
@@ -100,7 +98,7 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
         statements = [{ 'statement': statement, 'parameters': parameters }];
     }
 
-    var uri = neo4j + '/db/data/transaction/commit';
+    var uri = this.neo4j + '/db/data/transaction/commit';
 
     request.post(
         { 'uri': uri, 'json': { 'statements': statements } },
