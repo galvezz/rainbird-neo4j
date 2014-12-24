@@ -1,7 +1,8 @@
 # Rainbird Neo4j
 
-Thin wrapper around the Neo4j REST interface, specifically to the
-`/db/data/transaction/commit` end point.
+Thin wrapper around the [Neo4j Transactional Cypher HTTP REST][REST] endpoint,
+(`/db/data/transaction/commit`) that adds the ability to perform client side
+substitutions in queries and returns results in a slightly saner fashion.
 
 ## Installation
 
@@ -198,4 +199,5 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+[REST]: http://neo4j.com/docs/stable/rest-api-transactional.html
 [parameters]: http://neo4j.com/docs/stable/cypher-parameters.html
