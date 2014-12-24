@@ -11,6 +11,37 @@ function Neo4j(uri) {
     neo4j = uri;
 }
 
+// Results from the Neo4j REST API aren't in the best format and the
+// documentation on the format is sketchy. Instead we flip the results into a
+// format whereby a list of results is returned, one for each query run. That,
+// in turn contains a list of each row returned for the given query. Each row
+// is an object where the columns are defined as properties which themselves
+// are objects containing the returned data for that element.
+
+
+function mapResults(results) {
+    var mappedResults = [];
+
+    try {
+        results.forEach(function(result) {
+            var mappedResult = [];
+            result.data.forEach(function(data) {
+                data.row.forEach(function(element, index) {
+                    var mappedData = {};
+                    mappedData[result.columns[index]] = element;
+                    mappedResult.push(mappedData);
+                });
+            });
+
+            mappedResults.push(mappedResult);
+        });
+    } catch(err) {
+        return [];
+    }
+
+    return mappedResults;
+}
+
 // To run a query you can either provide a Cypher statement as a string and
 // an optional parameters object along with a callback, or you can provide
 // an array of statement objects. Each statement object should contain a
@@ -74,8 +105,8 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
     request.post(
         { 'uri': uri, 'json': { 'statements': statements } },
         function(err, results) {
-            var data = results && results.body ? results.body.results :
-                undefined;
+            var data = results && results.body ?
+                mapResults(results.body.results) : [];
             callback(err, data);
         }
     );
