@@ -88,7 +88,7 @@ Will return the result:
             }
         },
         {
-            bar: {
+            "bar": {
                 "name": "baz",
                 "type": "String"
             }
@@ -111,7 +111,7 @@ You will get the result:
     [
         {
             "foo": {
-                name: "baz"
+                "name": "baz"
             }
         }
     ],
