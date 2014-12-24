@@ -82,15 +82,15 @@ Will return the result:
 [
     [
         {
-            foo: {
-                name: 'baz',
-                type: 'String'
+            "foo": {
+                "name": "baz",
+                "type": "String"
             }
         },
         {
             bar: {
-                name: 'baz',
-                type: 'String'
+                "name": "baz",
+                "type": "String"
             }
         }
     ]
@@ -110,15 +110,15 @@ You will get the result:
 [
     [
         {
-            foo: {
-                name: 'baz'
+            "foo": {
+                name: "baz"
             }
         }
     ],
     [
         {
-            bar: {
-                name: 'baz'
+            "bar": {
+                "name": "baz"
             }
         }
     ]
