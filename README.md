@@ -24,7 +24,7 @@ db.query('MATCH (n) RETURN n', function(err, results) {
 });
 ```
 
-## `query`
+## Function `query`
 
 The `query` function can be called in three different ways:
 
@@ -125,7 +125,7 @@ You will get the result:
 ]
 ```
 
-## `buildStatement`
+## Function `buildStatement`
 
 The `buildStatement` function is a synchronous helper function that will
 construct a valid _statement object_. It also allows for the use of client side
