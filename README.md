@@ -1,4 +1,5 @@
 # Rainbird Neo4j
+https://codeship.com/projects/415e09a0-71a3-0132-22e9-028f765b4235/status?branch=master
 
 Thin wrapper around the [Neo4j Transactional Cypher HTTP][REST] REST endpoint
 (specifically `/db/data/transaction/commit`) that adds the ability to perform
