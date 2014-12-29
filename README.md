@@ -11,7 +11,9 @@ fashion.
 npm install --save rainbird-neo4j
 ```
 
-## Sample Usage
+## Usage
+
+### Sample Usage
 
 ```javascript
 var Neo4j = rewire('rainbird-neo4j');
@@ -26,7 +28,7 @@ db.query('MATCH (n) RETURN n', function(err, results) {
 });
 ```
 
-## Function `query`
+### Function `query`
 
 The `query` function can be called in three different ways:
 
@@ -62,7 +64,7 @@ _parameters object_. See below for the format of `results`.
 `err`, instead an empty `results` object will be sent. See below for more
 details.
 
-### Results format
+#### Results format
 
 Results are returned as a list containing one element per query run. Each
 individual result in this list is itself a list of rows returned. Each row is
@@ -127,7 +129,7 @@ You will get the result:
 ]
 ```
 
-## Function `buildStatement`
+### Function `buildStatement`
 
 The `buildStatement` function is a synchronous helper function that will
 construct a valid _statement object_. It also allows for the use of client side
@@ -183,6 +185,53 @@ Where:
 
 The output from `buildStatement` should be added to an array and passed to
 `query(array, callback)`.
+
+## Testing
+
+The package can be tested using:
+
+```bash
+npm test
+```
+
+This runs the linter, unit tests and creates the `docco` documentation along
+with coverage reports and `plato` reports.
+
+To perform full functional tests that connect to a test Neo4j instance that can
+be cleared down after each test run:
+
+```bash
+export NEO4J_TEST_URL=http://localhost:4747
+npm run-script functional-test
+```
+
+Replace `http://localhost:4747` with the URL of your test Neo4j instant.
+
+**Note: the functional tests clear _everything_ in the test database. Please use
+a stand alone test DB for functional testing.**
+
+### Functional testing with Docker
+
+The best method of providing a test Neo4j instance for functional testing is by
+running a throwaway instance in Docker. To run:
+
+```bash
+docker run -i -t -d --name neo4j --privileged -p 7676:7474 tpires/neo4j
+```
+
+Here the port mapping has been changed from `7676` to `7474` which allows the
+Docker instance to live on the same machine as a local instance. You can adjust
+`7676` to point to any port, potentially running more than one Docker instance
+by providing a different name to the `docker` command.
+
+You can now expose this to the functional tests using:
+
+```bash
+export NEO4J_TEST_URL="http:${DOCKER_IP}:7676"
+npm run-script functional-test
+```
+
+The Docker instance can now be stopped and deleted if it's no longer needed.
 
 ## Licence
 
