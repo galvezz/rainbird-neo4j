@@ -186,6 +186,22 @@ Where:
 The output from `buildStatement` should be added to an array and passed to
 `query(array, callback)`.
 
+### Escaping Identifiers
+
+Identifiers in Neo4j follow the following basic rules:
+
+   * case sensitive
+   * can contain underscores and alphanumeric characters ([a-zA-Z0-9_])
+   * must always start with a letter. ([a-zA-Z]+[a-zA-Z0-9_]*)
+
+More complex identifiers can be quoted using backtick (`) characters.
+Backticks themselves can be escaped using a backtick. Identifiers can be easily
+escaped using:
+
+```javascript
+var identifier = neo4j.escapeIdentifier('a complex identifier`);
+```
+
 ## Testing
 
 The package can be tested using:
@@ -232,6 +248,16 @@ npm run-script functional-test
 ```
 
 The Docker instance can now be stopped and deleted if it's no longer needed.
+
+## Release Notes
+
+### v0.0.2
+
+   * [New] - Add `escapeIdentifier` function
+
+### v0.0.1
+
+   * [New] - Initial release
 
 ## Licence
 
