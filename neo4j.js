@@ -176,6 +176,22 @@ Neo4j.prototype.buildStatement = function(template, substitutions, parameters) {
     return { 'statement': statement, 'parameters': parameters };
 };
 
+// Identifiers in Neo4j follow the following basic rules:
+//
+//    * case sensitive
+//    * can contain underscores and alphanumeric characters ([a-zA-Z0-9_])
+//    * must always start with a letter. ([a-zA-Z]+[a-zA-Z0-9_]*)
+//
+// More complex identifiers can be quoted using backtick (`) characters.
+// Backticks themselves can be escaped using a backtick. To avoid complex
+// pattern matching on a string we simply assume all identifiers need to be
+// quoted by escaping backticks and surrounding the string in backticks.
+
+Neo4j.prototype.escapeIdentifier = function(string) {
+    var result = string.replace(/`/g, '``');
+    return '`' + result + '`';
+};
+
 module.exports = Neo4j;
 
 // ## License
