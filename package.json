@@ -1,7 +1,7 @@
 {
   "name": "rainbird-neo4j",
   "description": "Thin wrapper around the Neo4j REST interface",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "neo4j.js",
   "author": "Dom Davis <dom@rainbird.ai>",
   "license": "ISC",

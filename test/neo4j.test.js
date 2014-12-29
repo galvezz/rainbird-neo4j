@@ -300,15 +300,13 @@ describe('Neo4j wrapper', function() {
 
 describe('Escaping identifiers', function() {
 
-    var db = new Neo4j('http://localhost:7474');
-
     it('Should handle complex strings', function(done) {
-        expect(db.escapeIdentifier('a_:b c\'d')).to.equal('`a_:b c\'d`');
+        expect(Neo4j.escapeIdentifier('a_:b c\'d')).to.equal('`a_:b c\'d`');
         done();
     });
 
     it('Should escape backticks', function(done) {
-        expect(db.escapeIdentifier('a`b')).to.equal('`a``b`');
+        expect(Neo4j.escapeIdentifier('a`b')).to.equal('`a``b`');
         done();
     });
 });

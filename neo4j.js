@@ -187,12 +187,13 @@ Neo4j.prototype.buildStatement = function(template, substitutions, parameters) {
 // pattern matching on a string we simply assume all identifiers need to be
 // quoted by escaping backticks and surrounding the string in backticks.
 
-Neo4j.prototype.escapeIdentifier = function(string) {
+function escapeIdentifier(string) {
     var result = string.replace(/`/g, '``');
     return '`' + result + '`';
-};
+}
 
 module.exports = Neo4j;
+module.exports.escapeIdentifier = escapeIdentifier;
 
 // ## License
 //

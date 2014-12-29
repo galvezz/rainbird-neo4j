@@ -199,7 +199,7 @@ Backticks themselves can be escaped using a backtick. Identifiers can be easily
 escaped using:
 
 ```javascript
-var identifier = neo4j.escapeIdentifier('a complex identifier`);
+var identifier = Neo4j.escapeIdentifier('a complex identifier`);
 ```
 
 ## Testing
@@ -250,6 +250,10 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 ## Release Notes
+
+### v0.0.3
+
+   * [Fix] - `escapeIdentifier` no longer needs Neo4J to be initialised
 
 ### v0.0.2
 
