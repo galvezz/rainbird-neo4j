@@ -250,21 +250,21 @@ npm run-script functional-test
 
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
-## Release Notes
+# Release Notes
 
-### v0.0.3
+## v0.0.3
 
    * [Fix] - `escapeIdentifier` no longer needs Neo4J to be initialised
 
-### v0.0.2
+## v0.0.2
 
    * [New] - Add `escapeIdentifier` function
 
-### v0.0.1
+## v0.0.1
 
    * [New] - Initial release
 
-## Licence
+# Licence
 
 Copyright (c) 2014, Rainbird Technologies <follow@rainbird.ai>
 
