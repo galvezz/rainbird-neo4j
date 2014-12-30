@@ -5,6 +5,9 @@
   "main": "neo4j.js",
   "author": "Dom Davis <dom@rainbird.ai>",
   "license": "ISC",
+  "engines" : {
+    "node" : "0.10.30"
+  },
   "scripts": {
     "start": "node app.js",
     "pretest": "rm -rf docs && rm -rf coverage && docco neo4j.js",
