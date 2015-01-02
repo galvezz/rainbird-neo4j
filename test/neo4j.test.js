@@ -121,10 +121,8 @@ describe('Neo4j wrapper', function() {
 
     describe('when building a statement', function() {
 
-        var db = new Neo4j('http://localhost:7474');
-
         it('should work with just a template defined', function(done) {
-            var statement = db.buildStatement('MATCH (n) RETURN n');
+            var statement = Neo4j.buildStatement('MATCH (n) RETURN n');
 
             expect(statement).to.have.property('statement',
                 'MATCH (n) RETURN n');
@@ -135,7 +133,7 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should handle statements as arrays', function(done) {
-            var statement = db.buildStatement(['MATCH (n)', 'RETURN n']);
+            var statement = Neo4j.buildStatement(['MATCH (n)', 'RETURN n']);
 
             expect(statement).to.have.property('statement',
                 'MATCH (n)\nRETURN n');
@@ -146,7 +144,7 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should perform any given substitutions', function(done) {
-            var statement = db.buildStatement('MATCH (${x}) RETURN ${x}',
+            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
                 { 'x': 'n' });
 
             expect(statement).to.have.property('statement',
@@ -158,7 +156,7 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should ignore extra definitions of substitutions', function(done) {
-            var statement = db.buildStatement('MATCH (${x}) RETURN ${x}',
+            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
                 { 'x': 'n', 'y': 'z' });
 
             expect(statement).to.have.property('statement',
@@ -171,20 +169,20 @@ describe('Neo4j wrapper', function() {
 
         it('should error if an undefined substitution is used', function(done) {
             expect(function() {
-                db.buildStatement('MATCH (${x}) RETURN n');
+                Neo4j.buildStatement('MATCH (${x}) RETURN n');
             }).to.throw(Error);
             done();
         });
 
         it('should error if undefined substitutions are used', function(done) {
             expect(function() {
-                db.buildStatement('MATCH (${x}) RETURN ${y}');
+                Neo4j.buildStatement('MATCH (${x}) RETURN ${y}');
             }).to.throw(Error);
             done();
         });
 
         it('should add parameter object', function(done) {
-            var statement = db.buildStatement(
+            var statement = Neo4j.buildStatement(
                 'MATCH (n {value: {value}) RETURN n', {}, { 'value': 'foo' });
 
             expect(statement).to.have.property('statement',

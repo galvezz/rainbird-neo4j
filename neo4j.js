@@ -128,7 +128,7 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
 // var template = `MATCH (:${foo} {value: {value}})`;
 // var substitutions = { 'foo': 'Baz'};
 // var parameters = { 'value': 'bar' };
-// var statement = neo4j.buildStatement(template, substitutions, parameters);
+// var statement = Neo4j.buildStatement(template, substitutions, parameters);
 // ```
 //
 // Will yield the following object for `statement`:
@@ -140,7 +140,7 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
 // }
 // ```
 
-Neo4j.prototype.buildStatement = function(template, substitutions, parameters) {
+function buildStatement(template, substitutions, parameters) {
     var statement = template;
 
     if (Array.isArray(template)) {
@@ -174,7 +174,7 @@ Neo4j.prototype.buildStatement = function(template, substitutions, parameters) {
     }
 
     return { 'statement': statement, 'parameters': parameters };
-};
+}
 
 // Identifiers in Neo4j follow the following basic rules:
 //
@@ -193,6 +193,7 @@ function escapeIdentifier(string) {
 }
 
 module.exports = Neo4j;
+module.exports.buildStatement = buildStatement;
 module.exports.escapeIdentifier = escapeIdentifier;
 
 // ## License

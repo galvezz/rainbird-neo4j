@@ -149,7 +149,7 @@ For example, the following code:
 var template = `MATCH (:${foo} {value: {value}})`;
 var substitutions = { 'foo': 'Baz'};
 var parameters = { 'value': 'bar' };
-var statement = neo4j.buildStatement(template, substitutions, parameters);
+var statement = Neo4j.buildStatement(template, substitutions, parameters);
 ```
 
 Will yield the following object for `statement`:
@@ -251,6 +251,10 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.0.4
+
+   * [Fix] - `buildStatement` no longer needs Neo4J to be initialised
 
 ## v0.0.3
 
