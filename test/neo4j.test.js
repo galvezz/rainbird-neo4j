@@ -217,15 +217,15 @@ describe('Neo4j wrapper', function() {
             expect(results).to.have.length(1);
 
             expect(results[0]).to.be.an('array');
-            expect(results[0]).to.have.length(2);
+            expect(results[0]).to.have.length(1);
 
             expect(results[0][0]).to.have.property('foo');
             expect(results[0][0].foo).to.have.property('type', 'String');
             expect(results[0][0].foo).to.have.property('value', 'one');
 
-            expect(results[0][1]).to.have.property('bar');
-            expect(results[0][1].bar).to.have.property('type', 'String');
-            expect(results[0][1].bar).to.have.property('value', 'two');
+            expect(results[0][0]).to.have.property('bar');
+            expect(results[0][0].bar).to.have.property('type', 'String');
+            expect(results[0][0].bar).to.have.property('value', 'two');
 
            done(); 
         });
