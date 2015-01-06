@@ -142,13 +142,13 @@ You will get the result:
     [],
     [
         {
-            "s": { "name": "object" }
-            "r": { "name": "relationship" }
+            "s": { "name": "object" },
+            "r": { "name": "relationship" },
             "o": { "name": "subject" }
         },
         {
-            "s": { "name": "subject" }
-            "r": { "name": "relationship" }
+            "s": { "name": "subject" },
+            "r": { "name": "relationship" },
             "o": { "name": "object" }
         }
     ]
