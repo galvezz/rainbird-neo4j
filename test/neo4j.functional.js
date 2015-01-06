@@ -75,16 +75,16 @@ describe('Neo4j wrapper, when querying the database', function() {
             expect(results[1]).to.have.length(0);
 
             expect(results[2]).to.be.an('array');
-            expect(results[2]).to.have.length(3);
+            expect(results[2]).to.have.length(1);
 
             expect(results[2][0]).to.have.property('s');
             expect(results[2][0].s).to.be.empty();
 
-            expect(results[2][1]).to.have.property('r');
-            expect(results[2][1].r).to.be.empty();
+            expect(results[2][0]).to.have.property('r');
+            expect(results[2][0].r).to.be.empty();
 
-            expect(results[2][2]).to.have.property('o');
-            expect(results[2][2].o).to.be.empty();
+            expect(results[2][0]).to.have.property('o');
+            expect(results[2][0].o).to.be.empty();
 
             done();
         });
@@ -124,16 +124,16 @@ describe('Neo4j wrapper, when querying the database', function() {
             expect(results).to.have.length(1);
 
             expect(results[0]).to.be.an('array');
-            expect(results[0]).to.have.length(2);
+            expect(results[0]).to.have.length(1);
 
             expect(results[0][0]).to.have.property('foo');
             expect(results[0][0].foo).to.have.property('name', 'baz');
             expect(results[0][0].foo).to.have.property('type', 'String');
 
 
-            expect(results[0][1]).to.have.property('bar');
-            expect(results[0][1].bar).to.have.property('name', 'baz');
-            expect(results[0][1].bar).to.have.property('type', 'String');
+            expect(results[0][0]).to.have.property('bar');
+            expect(results[0][0].bar).to.have.property('name', 'baz');
+            expect(results[0][0].bar).to.have.property('type', 'String');
 
             done();
         });
@@ -167,6 +167,57 @@ describe('Neo4j wrapper, when querying the database', function() {
 
             expect(results[1][0]).to.have.property('bar');
             expect(results[1][0].bar).to.have.property('name', 'baz');
+
+            done();
+        });
+    });
+
+    it('should match the readme for complex queries', function(done) {
+        var statements = [
+            {
+                'statement': 'CREATE ({name: \'subject\'})-[:R {name: ' +
+                '\'relationship\'}]->({name: \'object\'})',
+                'parameters': {}
+            },
+            {
+                'statement': 'MATCH (s)-[r]-(o) RETURN s, r, o',
+                'parameters': {}
+            }
+        ];
+
+        db.query(statements, function(err, results) {
+            expect(err).to.not.be.ok();
+            expect(results).to.be.an('array');
+            expect(results).to.have.length(2);
+
+            expect(results[0]).to.be.an('array');
+            expect(results[0]).to.have.length(0);
+
+            expect(results[1]).to.be.an('array');
+            expect(results[1]).to.have.length(2);
+
+            expect(results[1][0]).to.have.property('s');
+            expect(results[1][0]).to.have.property('r');
+            expect(results[1][0]).to.have.property('o');
+
+            expect(results[1][1]).to.have.property('s');
+            expect(results[1][1]).to.have.property('r');
+            expect(results[1][1]).to.have.property('o');
+
+            expect(results[1][0].r).to.have.property('name', 'relationship');
+            expect(results[1][1].r).to.have.property('name', 'relationship');
+
+            expect(results[1][0].s).to.have.property('name');
+
+            if (results[1][0].s.name == 'subject') {
+                expect(results[1][0].o).to.have.property('name', 'object');
+                expect(results[1][1].s).to.have.property('name', 'object');
+                expect(results[1][1].o).to.have.property('name', 'subject');
+            } else {
+                expect(results[1][0].o).to.have.property('name', 'subject');
+                expect(results[1][1].s).to.have.property('name', 'subject');
+                expect(results[1][1].o).to.have.property('name', 'object');
+            }
 
             done();
         });

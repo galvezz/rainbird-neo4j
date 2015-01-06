@@ -24,11 +24,13 @@ function mapResults(results) {
         results.forEach(function(result) {
             var mappedResult = [];
             result.data.forEach(function(data) {
+                var mappedData = {};
+
                 data.row.forEach(function(element, index) {
-                    var mappedData = {};
                     mappedData[result.columns[index]] = element;
-                    mappedResult.push(mappedData);
                 });
+
+                mappedResult.push(mappedData);
             });
 
             mappedResults.push(mappedResult);
