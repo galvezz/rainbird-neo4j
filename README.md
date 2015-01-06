@@ -90,9 +90,7 @@ Will return the result:
             "foo": {
                 "name": "baz",
                 "type": "String"
-            }
-        },
-        {
+            },
             "bar": {
                 "name": "baz",
                 "type": "String"
@@ -125,6 +123,33 @@ You will get the result:
             "bar": {
                 "name": "baz"
             }
+        }
+    ]
+]
+```
+
+With the more complex query:
+
+```
+CREATE ({name: 'subject'})-[:R {name: 'relationship'}]->({name: 'object'})
+MATCH (s)-[r]-(o) RETURN s, r, o
+```
+
+You will get the result:
+
+```json
+[
+    [],
+    [
+        {
+            "s": { "name": "object" }
+            "r": { "name": "relationship" }
+            "o": { "name": "subject" }
+        },
+        {
+            "s": { "name": "subject" }
+            "r": { "name": "relationship" }
+            "o": { "name": "object" }
         }
     ]
 ]
@@ -251,6 +276,12 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.1.0
+
+   * [Fix] - Fixed the mapping behaviour when returning more than one variable
+             so that all variables are mapped into the same object rather than
+             multiple objects being returned.
 
 ## v0.0.4
 
