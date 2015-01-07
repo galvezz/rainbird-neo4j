@@ -277,27 +277,31 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
 
+## v0.1.1
+
+  * [Misc] Lock down version numbers of package dependencies
+
 ## v0.1.0
 
-   * [Fix] - Fixed the mapping behaviour when returning more than one variable
-             so that all variables are mapped into the same object rather than
-             multiple objects being returned.
+  *  [Fix] Fixed the mapping behaviour when returning more than one variable so
+           that all variables are mapped into the same object rather than
+           multiple objects being returned.
 
 ## v0.0.4
 
-   * [Fix] - `buildStatement` no longer needs Neo4J to be initialised
+  *  [Fix] `buildStatement` no longer needs Neo4J to be initialised
 
 ## v0.0.3
 
-   * [Fix] - `escapeIdentifier` no longer needs Neo4J to be initialised
+  *  [Fix] `escapeIdentifier` no longer needs Neo4J to be initialised
 
 ## v0.0.2
 
-   * [New] - Add `escapeIdentifier` function
+  *  [New] Add `escapeIdentifier` function
 
 ## v0.0.1
 
-   * [New] - Initial release
+  *  [New] Initial release
 
 # Licence
 

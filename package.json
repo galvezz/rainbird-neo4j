@@ -1,12 +1,12 @@
 {
   "name": "rainbird-neo4j",
   "description": "Thin wrapper around the Neo4j REST interface",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "neo4j.js",
   "author": "Dom Davis <dom@rainbird.ai>",
   "license": "ISC",
   "engines" : {
-    "node" : "0.10.30"
+    "node" : ">=0.10.30"
   },
   "scripts": {
     "start": "node app.js",
@@ -24,15 +24,15 @@
     "url": "https://github.com/RainBirdAi/rainbird-neo4j/issues"
   },
   "dependencies": {
-    "request": "*"
+    "request": "2.51.x"
   },
   "devDependencies": {
-    "rainbird-linter": "*",
-    "jshint": "*",
-    "mocha": "*",
-    "chai": "*",
-    "rewire": "*",
-    "docco": "*",
-    "istanbul": "*"
+    "rainbird-linter": "0.1.x",
+    "jshint": "2.5.x",
+    "mocha": "2.1.x",
+    "chai": "1.10.x",
+    "rewire": "2.1.x",
+    "docco": "0.6.x",
+    "istanbul": "0.3.x"
   }
 }
