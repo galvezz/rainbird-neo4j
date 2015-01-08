@@ -90,9 +90,9 @@ describe('Neo4j wrapper, when querying the database', function() {
         });
     });
 
-    it('should fail quietly with bad queries', function(done) {
+    it('should error with bad queries', function(done) {
         db.query('Duff query', {}, function(err, results) {
-            expect(err).to.not.be.ok();
+            expect(err).to.be.ok();
             expect(results).to.be.an('array');
             expect(results).to.have.length(0);
             done();
