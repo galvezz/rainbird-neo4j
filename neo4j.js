@@ -148,6 +148,8 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
 // }
 // ```
 
+// If only one object is given it is assumed to be a parameters object
+
 function buildStatement(template, substitutions, parameters) {
     var statement = template;
 
@@ -161,7 +163,7 @@ function buildStatement(template, substitutions, parameters) {
     }
 
     if (!parameters) {
-        parameters = {};
+        parameters = substitutions;
     }
 
     for (var substitution in substitutions) {
