@@ -159,7 +159,7 @@ describe('Neo4j wrapper', function() {
 
         it('should perform any given substitutions', function(done) {
             var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n' });
+                { 'x': 'n' }, {});
 
             expect(statement).to.have.property('statement',
                 'MATCH (n) RETURN n');
@@ -171,7 +171,7 @@ describe('Neo4j wrapper', function() {
 
         it('should ignore extra definitions of substitutions', function(done) {
             var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n', 'y': 'z' });
+                { 'x': 'n', 'y': 'z' }, {});
 
             expect(statement).to.have.property('statement',
                 'MATCH (n) RETURN n');
@@ -203,6 +203,14 @@ describe('Neo4j wrapper', function() {
                 'MATCH (n {value: {value}) RETURN n');
             expect(statement).to.have.property('parameters');
             expect(statement.parameters).to.have.property('value', 'foo');
+            done();
+        });
+
+        it('should allow just parameters to be passed', function(done) {
+            var parameters = {'a': 'b'};
+            var statement = Neo4j.buildStatement('test', parameters);
+            expect(statement).to.have.property('statement', 'test');
+            expect(statement).to.have.property('parameters', parameters);
             done();
         });
     });
