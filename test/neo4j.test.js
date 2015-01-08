@@ -102,11 +102,29 @@ describe('Neo4j wrapper', function() {
             });
         });
 
-        it('should pass errors through', function(done) {
+        it('should pass errors from Neo4j through', function(done) {
             errors = ['Error'];
 
             db.query('test', function(err, results) {
                 expect(err).to.equal(errors);
+                expect(results).to.be.an('array');
+                expect(results).to.be.empty();
+
+                done();
+            });
+        });
+
+        it('should pass errors from the request through', function(done) {
+            var mock = {
+                'post': function(args, callback) {
+                    callback('Error');
+                }
+            };
+
+            Neo4j.__set__('request', mock);
+
+            db.query('test', function(err, results) {
+                expect(err).to.equal('Error');
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
 
