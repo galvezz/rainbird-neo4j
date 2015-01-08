@@ -105,9 +105,15 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
     request.post(
         { 'uri': uri, 'json': { 'statements': statements } },
         function(err, results) {
-            var data = results && results.body ?
-                mapResults(results.body.results) : [];
-            callback(err, data);
+            if (err) {
+                return callback(err, []);
+            }
+
+            if (results.body.errors.length > 0) {
+                callback(results.body.errors, []);
+            } else {
+                callback(null, mapResults(results.body.results));
+            }
         }
     );
 };
