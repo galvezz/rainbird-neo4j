@@ -61,10 +61,6 @@ is a valid Cypher query string; and `parameters` which is a _parameters object_.
 See the [Neo4j documentation on parameters][parameters] for more details on the
 _parameters object_. See below for the format of `results`.
 
-**Note:** Invalid Cypher queries will not cause the callback to return with
-`err`, instead an empty `results` object will be sent. See below for more
-details.
-
 #### Results format
 
 Results are returned as a list containing one element per query run. Each
@@ -276,6 +272,10 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.1.2
+
+  *  [Fix] Errors are now correctly returned from Neo4j
 
 ## v0.1.1
 
