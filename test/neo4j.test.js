@@ -7,12 +7,14 @@ describe('Neo4j wrapper', function() {
     describe('when running a query (with mock request)', function() {
 
         var db;
+        var errors = [];
 
         before(function(done) {
             Neo4j.__set__({
                 'request': {
                     'post': function(args, callback) {
-                        callback(null, { 'body': { 'results': args } });
+                        callback(null,
+                            { 'body': { 'results': args, 'errors': errors } });
                     }
                 },
                 'mapResults': function(results) { return results; }
@@ -101,16 +103,10 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should pass errors through', function(done) {
-            var mock = {
-                'post': function(args, callback) {
-                    callback('Error');
-                }
-            };
-
-            Neo4j.__set__('request', mock);
+            errors = ['Error'];
 
             db.query('test', function(err, results) {
-                expect(err).to.equal('Error');
+                expect(err).to.equal(errors);
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
 
@@ -227,7 +223,7 @@ describe('Neo4j wrapper', function() {
             expect(results[0][0].bar).to.have.property('type', 'String');
             expect(results[0][0].bar).to.have.property('value', 'two');
 
-           done(); 
+            done();
         });
 
         it('should handle complex results', function(done) {
