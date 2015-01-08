@@ -186,10 +186,10 @@ The `buildStatement` can be called in one of 6 ways:
 
 ```javascript
 buildStatement(string)
-buildStatement(string, substitutions)
+buildStatement(string, parameters)
 buildStatement(string, substitutions, parameters)
 buildStatement(array)
-buildStatement(array, substitutions)
+buildStatement(array, parameters)
 buildStatement(array, substitutions, parameters)
 ```
 
@@ -272,6 +272,11 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.1.3
+
+  *  [New] When calling `buildStatement` with only two arguments the second
+           argument is assumed to be the parameters object.
 
 ## v0.1.2
 
