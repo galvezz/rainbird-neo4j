@@ -45,8 +45,11 @@ query(string, object, callback)
 ```
 
 Where `string` is a valid Cypher query string, `object` is a _parameters object_
-and `callback` is a function that takes two arguments, `err` and `results`. See
-the [Neo4j documentation on parameters][parameters] for more details on the
+and `callback` is a function that takes two arguments, `err` and `results`. The
+`err` object will have a parameter `statements` set which contains the
+statements sent to Neo4j.
+
+See the [Neo4j documentation on parameters][parameters] for more details on the
 _parameters object_. See below for the format of `results`.
 
 ```javascript
@@ -272,6 +275,12 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.1.4
+
+  *  [Fix] `query` now consistently returns an `Error` object on error.
+  * [Misc] The `Error` object returned by `query` has a `statements` property
+           which contains the statements being sent to Neo4j
 
 ## v0.1.3
 
