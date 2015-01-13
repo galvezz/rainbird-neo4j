@@ -107,11 +107,13 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
         function(err, results) {
             if (err) {
                 err.statements = statements;
+                err.errors = [];
                 return callback(err, []);
             }
 
             if (results.body.errors.length > 0) {
-                var error = new Error(results.body.errors);
+                var error = new Error('Error running query');
+                error.errors = results.body.errors;
                 error.statements = statements;
                 callback(error, []);
             } else {
