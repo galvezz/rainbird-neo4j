@@ -106,7 +106,8 @@ describe('Neo4j wrapper', function() {
             errors = ['Error'];
 
             db.query('test', function(err, results) {
-                expect(err).to.equal(errors);
+                expect(err).to.have.property('statements');
+                expect(err).to.have.property('message', 'Error');
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
 
