@@ -284,6 +284,11 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
 
+## v0.1.5
+
+  *  [Fix] Fix errors coming through as the string `[object Object]`
+  * [Misc] Give access to the complete error object returned by Neo4j
+
 ## v0.1.4
 
   *  [Fix] `query` now consistently returns an `Error` object on error.
