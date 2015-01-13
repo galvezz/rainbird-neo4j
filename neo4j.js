@@ -106,11 +106,14 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
         { 'uri': uri, 'json': { 'statements': statements } },
         function(err, results) {
             if (err) {
+                err.statements = statements;
                 return callback(err, []);
             }
 
             if (results.body.errors.length > 0) {
-                callback(results.body.errors, []);
+                var error = new Error(results.body.errors);
+                error.statements = statements;
+                callback(error, []);
             } else {
                 callback(null, mapResults(results.body.results));
             }
