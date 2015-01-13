@@ -103,11 +103,25 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should pass errors from Neo4j through', function(done) {
-            errors = ['Error'];
+            errors = [
+                {
+                    'code': 'Error code 1',
+                    'message': 'Error message 1'
+                },
+                {
+                    'code': 'Error code 2',
+                    'message': 'Error message 2'
+                }
+            ];
 
             db.query('test', function(err, results) {
                 expect(err).to.have.property('statements');
-                expect(err).to.have.property('message', 'Error');
+                expect(err).to.have.property('message');
+                expect(err).to.have.property('errors');
+
+                expect(err.errors).to.be.an('array');
+                expect(err.errors).to.have.length(2);
+
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
 
@@ -118,14 +132,21 @@ describe('Neo4j wrapper', function() {
         it('should pass errors from the request through', function(done) {
             var mock = {
                 'post': function(args, callback) {
-                    callback('Error');
+                    callback(new Error('Error'));
                 }
             };
 
             Neo4j.__set__('request', mock);
 
             db.query('test', function(err, results) {
-                expect(err).to.equal('Error');
+                expect(err).to.be.ok();
+                expect(err).to.have.property('statements');
+                expect(err).to.have.property('message', 'Error');
+                expect(err).to.have.property('errors');
+
+                expect(err.errors).to.be.an('array');
+                expect(err.errors).to.have.length(0);
+
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
 

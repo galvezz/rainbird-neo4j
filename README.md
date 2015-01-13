@@ -45,9 +45,7 @@ query(string, object, callback)
 ```
 
 Where `string` is a valid Cypher query string, `object` is a _parameters object_
-and `callback` is a function that takes two arguments, `err` and `results`. The
-`err` object will have a parameter `statements` set which contains the
-statements sent to Neo4j.
+and `callback` is a function that takes two arguments, `err` and `results`.
 
 See the [Neo4j documentation on parameters][parameters] for more details on the
 _parameters object_. See below for the format of `results`.
@@ -153,6 +151,16 @@ You will get the result:
     ]
 ]
 ```
+
+#### Error Format
+
+The `err` object has two extra parameters, `statements` and `errors`.
+
+`statements` contains an array of statements that were sent to Neo4J. This is in
+the same format as described in the [Neo4J REST][REST] documentation.
+
+`errors` contains an array of errors objects as described in the
+[Neo4j REST][REST] documentation.
 
 ### Function `buildStatement`
 
@@ -275,6 +283,11 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.1.5
+
+  *  [Fix] Fix errors coming through as the string `[object Object]`
+  * [Misc] Give access to the complete error object returned by Neo4j
 
 ## v0.1.4
 
