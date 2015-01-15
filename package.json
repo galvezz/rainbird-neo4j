@@ -10,10 +10,10 @@
   },
   "scripts": {
     "start": "node app.js",
-    "pretest": "rm -rf docs && rm -rf coverage && docco neo4j.js",
-    "test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec test/*.test.js",
+    "pretest": "rm -rf docs && rm -rf coverage && docco neo4j.js lib/*.js",
+    "test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec --recursive \"test/**/*.test.js\"",
     "posttest": "istanbul report html",
-    "functional-test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec"
+    "functional-test": "rblint -f ./linter.json && istanbul cover _mocha -- -R spec --recursive"
   },
   "homepage": "https://github.com/RainBirdAi/rainbird-neo4j",
   "repository": {
