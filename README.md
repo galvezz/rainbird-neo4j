@@ -3,8 +3,8 @@ https://codeship.com/projects/415e09a0-71a3-0132-22e9-028f765b4235/status?branch
 
 Thin wrapper around the [Neo4j Transactional Cypher HTTP][REST] REST endpoint
 (specifically `/db/data/transaction/commit`) that adds the ability to perform
-client side substitutions in queries and returns results in a slightly saner
-fashion.
+transactions and client side substitutions in queries. It also returns results
+in a slightly saner fashion than the raw endpoint.
 
 ## Installation
 
@@ -12,9 +12,7 @@ fashion.
 npm install --save rainbird-neo4j
 ```
 
-## Usage
-
-### Sample Usage
+## Basic Usage
 
 ```javascript
 var Neo4j = rewire('rainbird-neo4j');
@@ -29,40 +27,49 @@ db.query('MATCH (n) RETURN n', function(err, results) {
 });
 ```
 
-### Function `query`
+## Queries
 
-The `query` function can be called in three different ways:
+All functions that can perform queries accept these in the same format. At its
+most basic a query is just a query string. Providing a parameters object with
+the query string allows for queries with parameters. See the [Neo4j
+documentation on parameters][parameters] for more details on the _parameters
+object_.
+
+Multiple queries can be run from a single function call by providing them as
+_statement_.
+
+## <a name="statements"></a>Statements
+
+_Statements_ are an array of _statement objects_ which themselves contain a
+`statement` property and a `parameters` property. `statement` is any valid
+Cypher statement. `parameters` is a [parameters object][parameters].
+
+## Transactions
+
+Queries are always run within the context of a transaction. Where transactions
+are not explicitly stated then the queries will be wrapped in a _begin_ and
+_commit_. Any errors will cause the transaction to _rollback_.
+
+For transactions that span multiple function calls a call to `begin` will open
+a transaction and return a transaction ID. This can then be used to run multiple
+queries before `commit` or `rollback` are called. Both `begin` and `commit` can
+also run queries.
+
+Transactions time out after a period of time. The timeout is reset each time a
+call is made on that transaction. An empty query can be used to reset the
+timeout.
+
+## Callback
+
+All functions that take a callback expect it to be in the form:
 
 ```javascript
-query(string, callback)
+callback(err, results, info)
 ```
 
-Where `string` is a valid Cypher query string and `callback` is a function that
-takes two arguments, `err` and `results`. See below for the format of `results`.
+If `err` is set then `results` will be an empty array.
 
-```javascript
-query(string, object, callback)
-```
-
-Where `string` is a valid Cypher query string, `object` is a _parameters object_
-and `callback` is a function that takes two arguments, `err` and `results`.
-
-See the [Neo4j documentation on parameters][parameters] for more details on the
-_parameters object_. See below for the format of `results`.
-
-```javascript
-query(array, callback)
-```
-
-Where `array` is an array of _statement objects_ and `callback` is a function
-that takes two arguments, `err` and `results`.
-
-A _statement object_ is a simple object with two properties: `statement`, which
-is a valid Cypher query string; and `parameters` which is a _parameters object_.
-See the [Neo4j documentation on parameters][parameters] for more details on the
-_parameters object_. See below for the format of `results`.
-
-#### Results format
+### Results format
 
 Results are returned as a list containing one element per query run. Each
 individual result in this list is itself a list of rows returned. Each row is
@@ -152,22 +159,99 @@ You will get the result:
 ]
 ```
 
-#### Error Format
+### Info Format
 
-The `err` object has two extra parameters, `statements` and `errors`.
+The `info` object will contain any extra information returned by the function
+and will vary depending on the exact context.
 
-`statements` contains an array of statements that were sent to Neo4J. This is in
-the same format as described in the [Neo4J REST][REST] documentation.
+The `statements` parameter will always be set and will contain the
+[statements](statements) sent to Neo4j.
 
-`errors` contains an array of errors objects as described in the
-[Neo4j REST][REST] documentation.
+The `errors` parameter will contain an array of any errors returned by Neo4j.
+Any errors will have the same index as the statement that caused it. If no
+errors occurred then this list will be empty.
 
-### Function `buildStatement`
+The `timeout` parameter is only set if `begin`, or `query` within the context of
+a transaction has been called. It contains the datetime stamp when the
+transaction will time out. See the [Neo4j REST][REST] documentation for more
+details on the timeout.
+
+The `transactionID` parameter is only set in the context of a transaction and
+contains the current transaction ID. This is set by a call to `begin`.
+
+## Functions
+
+### `begin`
+
+Begin a transaction and optionally run a query in that transaction. The returned
+transaction ID should be used for all future calls involving the transaction.
+
+```javascript
+begin(callback)
+begin(transactionID, queryString, callback)
+begin(transactionID, queryString, parameters, callback)
+begin(transactionID, statements, callback)
+```
+
+### `query`
+
+Run a query, either as a single transaction, or part of a larger transaction.
+
+```javascript
+query(queryString, callback)
+query(queryString, parameters, callback)
+query(statements, callback)
+```
+
+```javascript
+query(transactionID, callback)
+query(transactionID, queryString, callback)
+query(transactionID, queryString, parameters, callback)
+query(transactionID, statements, callback)
+```
+
+The signature `query(transactionID, callback)` is provided as a convenience
+function to reset the timeout on a transaction. It will pass an empty set of
+statements to Neo4j and is the equivalent of
+`query(transactionId, [], callback)`
+
+### `commit`
+
+Commit an open transaction, optionally running a query before the transaction is
+closed.
+
+```javascript
+commit(transactionID, callback)
+commit(transactionID, queryString, callback)
+commit(transactionID, queryString, parameters, callback)
+commit(transactionID, statements, callback)
+```
+
+### `rollback`
+
+Rollback an existing transaction. `rollback` will always return an empty result
+set.
+
+```javascript
+rollback(transactionID, callback)
+```
+
+## `resetTimeout`
+
+Reset the timeout on a transaction without performing a query. Synonym for
+`query(transactionID, callback)`.
+
+```javascript
+resetTimeout(transactionID, callback)
+```
+
+### `buildStatement`
 
 The `buildStatement` function is a synchronous helper function that will
-construct a valid _statement object_. It also allows for the use of client side
-parameters. Client side parameters, or _substitutions_, are simply a convenience
-mechanism that allow complex query strings to be reused within the code by use of
+construct a valid _statement object_ for inclusion in an array of
+[statements](statements). It also allows for the use of client side parameters.
+Client side parameters, or _substitutions_, are simply a convenience mechanism
+that allow complex query strings to be reused within the code by use of
 substitutions. _Substitutions_ do not provide the performance gains that normal
 parameters give as they are parsed out before being sent to Neo4j.
 
@@ -196,12 +280,12 @@ Will yield the following object for `statement`:
 The `buildStatement` can be called in one of 6 ways:
 
 ```javascript
-buildStatement(string)
-buildStatement(string, parameters)
-buildStatement(string, substitutions, parameters)
-buildStatement(array)
-buildStatement(array, parameters)
-buildStatement(array, substitutions, parameters)
+Neo4j.buildStatement(string)
+Neo4j.buildStatement(string, parameters)
+Neo4j.buildStatement(string, substitutions, parameters)
+Neo4j.buildStatement(array)
+Neo4j.buildStatement(array, parameters)
+Neo4j.buildStatement(array, substitutions, parameters)
 ```
 
 Where:
@@ -216,8 +300,8 @@ Where:
    [Neo4j documentation on parameters][parameters] for more details on the
    _parameters object_
 
-The output from `buildStatement` should be added to an array and passed to
-`query(array, callback)`.
+The output from `buildStatement` should be added to an array to form
+[statements](statements).
 
 ### Escaping Identifiers
 
@@ -284,6 +368,19 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
 
+## v0.2.0
+
+  *  [New] Transactions over multiple function calls using
+           begin/commit/rollback.
+  *  [New] Return the statements passed to Neo4j on completion of a query.
+  * [Misc] Complete rewrite of the documentation.
+  * [Misc] Internal changes to the way parameters are handled
+  * [Note] This version is a breaking change. The error object passed to the
+           callback no longer contains the `errors` and `statements` parameters.
+           These now exist on the `info` object which is passed as the third
+           parameter to the callback. All other changes are backwards
+           compatible.
+
 ## v0.1.5
 
   *  [Fix] Fix errors coming through as the string `[object Object]`
@@ -293,7 +390,7 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
   *  [Fix] `query` now consistently returns an `Error` object on error.
   * [Misc] The `Error` object returned by `query` has a `statements` property
-           which contains the statements being sent to Neo4j
+           which contains the statements being sent to Neo4j.
 
 ## v0.1.3
 
@@ -302,11 +399,11 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
 ## v0.1.2
 
-  *  [Fix] Errors are now correctly returned from Neo4j
+  *  [Fix] Errors are now correctly returned from Neo4j.
 
 ## v0.1.1
 
-  * [Misc] Lock down version numbers of package dependencies
+  * [Misc] Lock down version numbers of package dependencies.
 
 ## v0.1.0
 
@@ -316,19 +413,19 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
 ## v0.0.4
 
-  *  [Fix] `buildStatement` no longer needs Neo4J to be initialised
+  *  [Fix] `buildStatement` no longer needs Neo4J to be initialised.
 
 ## v0.0.3
 
-  *  [Fix] `escapeIdentifier` no longer needs Neo4J to be initialised
+  *  [Fix] `escapeIdentifier` no longer needs Neo4J to be initialised.
 
 ## v0.0.2
 
-  *  [New] Add `escapeIdentifier` function
+  *  [New] Add `escapeIdentifier` function.
 
 ## v0.0.1
 
-  *  [New] Initial release
+  *  [New] Initial release.
 
 # Licence
 
