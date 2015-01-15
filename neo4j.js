@@ -1,4 +1,5 @@
 var request = require('request');
+var parser = require('./lib/argumentParser.js');
 
 // The Rainbird Neo4j package gives a very thin wrapper around the Neo4J REST
 // API and exposes this as an object. When you instantiate a new Neo4j object 
@@ -15,7 +16,6 @@ function Neo4j(uri) {
 // in turn contains a list of each row returned for the given query. Each row
 // is an object where the columns are defined as properties which themselves
 // are objects containing the returned data for that element.
-
 
 function mapResults(results) {
     var mappedResults = [];
@@ -35,7 +35,7 @@ function mapResults(results) {
 
             mappedResults.push(mappedResult);
         });
-    } catch(err) {
+    } catch (err) {
         return [];
     }
 
@@ -155,27 +155,16 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
 
 // If only one object is given it is assumed to be a parameters object
 
-function buildStatement(template, substitutions, parameters) {
-    var statement = template;
+function buildStatement() {
+    var args = parser.parseBuildStatementArguments(arguments);
+    var statement = args.statement;
 
-    if (Array.isArray(template)) {
-        statement = template.join('\n');
-    }
-
-
-    if (!substitutions) {
-        substitutions = {};
-    }
-
-    if (!parameters) {
-        parameters = substitutions;
-    }
-
-    for (var substitution in substitutions) {
+    for (var substitution in args.substitutions) {
         /* istanbul ignore else  */
-        if (substitutions.hasOwnProperty(substitution)) {
+        if (args.substitutions.hasOwnProperty(substitution)) {
             var regex = new RegExp('\\$\\{' + substitution + '}', 'g');
-            statement = statement.replace(regex, substitutions[substitution]);
+            statement =
+                statement.replace(regex, args.substitutions[substitution]);
         }
     }
 
@@ -188,7 +177,7 @@ function buildStatement(template, substitutions, parameters) {
         throw new Error(message);
     }
 
-    return { 'statement': statement, 'parameters': parameters };
+    return { 'statement': statement, 'parameters': args.parameters };
 }
 
 // Identifiers in Neo4j follow the following basic rules:
