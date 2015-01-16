@@ -24,7 +24,8 @@
     "url": "https://github.com/RainBirdAi/rainbird-neo4j/issues"
   },
   "dependencies": {
-    "request": "2.51.x"
+    "request": "2.51.x",
+    "async": "0.9.x"
   },
   "devDependencies": {
     "rainbird-linter": "0.1.x",
@@ -33,6 +34,7 @@
     "chai": "1.10.x",
     "rewire": "2.1.x",
     "docco": "0.6.x",
-    "istanbul": "0.3.x"
+    "istanbul": "0.3.x",
+    "rewire": "2.1.x"
   }
 }
