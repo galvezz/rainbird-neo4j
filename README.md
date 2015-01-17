@@ -367,14 +367,17 @@ The Docker instance can now be stopped and deleted if it's no longer needed.
 
   *  [New] Transactions over multiple function calls using
            begin/commit/rollback.
-  *  [New] Return the statements passed to Neo4j on completion of a query.
+  *  [New] The statements passed to Neo4j are now returned as part of the
+           callback.
+  *  [New] `buildStatement` and `escapeIdentifier` have been replaced with
+           `compose` and `escape` respectively. `compose` is no longer an
+           asynchronous function.
+  *  [New] The error object passed to the callback no longer contains the
+           `errors` and `statements` parameters. These now exist on the `info`
+           object which is passed as the third parameter to the callback.
   * [Misc] Complete rewrite of the documentation.
   * [Misc] Internal changes to the way parameters are handled
-  * [Note] This version is a breaking change. The error object passed to the
-           callback no longer contains the `errors` and `statements` parameters.
-           These now exist on the `info` object which is passed as the third
-           parameter to the callback. All other changes are backwards
-           compatible.
+  * [Note] **This version is a breaking change.**
 
 ## v0.1.5
 
