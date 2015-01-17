@@ -158,82 +158,90 @@ describe('Neo4j wrapper', function() {
     describe('when building a statement', function() {
 
         it('should work with just a template defined', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (n) RETURN n');
+            Neo4j.compose('MATCH (n) RETURN n', function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n) RETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                done();
+            });
         });
 
         it('should handle statements as arrays', function(done) {
-            var statement = Neo4j.buildStatement(['MATCH (n)', 'RETURN n']);
+            Neo4j.compose(['MATCH (n)', 'RETURN n'], function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n)\nRETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n)\nRETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                done();
+            });
         });
 
         it('should perform any given substitutions', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n' }, {});
+            Neo4j.compose('MATCH (${x}) RETURN ${x}', { 'x': 'n' }, {},
+                function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                    done();
+                }
+            );
         });
 
         it('should ignore extra definitions of substitutions', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n', 'y': 'z' }, {});
+            Neo4j.compose('MATCH (${x}) RETURN ${x}', { 'x': 'n', 'y': 'z' },
+                {}, function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                    done();
+                });
         });
 
         it('should error if an undefined substitution is used', function(done) {
-            expect(function() {
-                Neo4j.buildStatement('MATCH (${x}) RETURN n');
-            }).to.throw(Error);
-            done();
+            Neo4j.compose('MATCH (${x}) RETURN n', function(err, statement) {
+                expect(err).to.be.ok();
+                expect(statement).to.not.be.ok();
+                done();
+            });
         });
 
         it('should error if undefined substitutions are used', function(done) {
-            expect(function() {
-                Neo4j.buildStatement('MATCH (${x}) RETURN ${y}');
-            }).to.throw(Error);
-            done();
+            Neo4j.compose('MATCH (${x}) RETURN ${y}', { 'x': 'n' }, {},
+                function(err, statement) {
+                    expect(err).to.be.ok();
+                    expect(statement).to.not.be.ok();
+                    done();
+                }
+            );
         });
 
         it('should add parameter object', function(done) {
-            var statement = Neo4j.buildStatement(
-                'MATCH (n {value: {value}) RETURN n', {}, { 'value': 'foo' });
-
-            expect(statement).to.have.property('statement',
-                'MATCH (n {value: {value}) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.have.property('value', 'foo');
-            done();
+            Neo4j.compose('MATCH (n {value: {value}) RETURN n', {},
+                { 'value': 'foo' }, function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n {value: {value}) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.have.property('value',
+                        'foo');
+                    done();
+                }
+            );
         });
 
         it('should allow just parameters to be passed', function(done) {
             var parameters = {'a': 'b'};
-            var statement = Neo4j.buildStatement('test', parameters);
-            expect(statement).to.have.property('statement', 'test');
-            expect(statement).to.have.property('parameters', parameters);
-            done();
+            Neo4j.compose('test', parameters, function(err, statement) {
+                expect(statement).to.have.property('statement', 'test');
+                expect(statement).to.have.property('parameters', parameters);
+                done();
+            });
         });
     });
 
@@ -343,12 +351,12 @@ describe('Neo4j wrapper', function() {
 describe('Escaping identifiers', function() {
 
     it('Should handle complex strings', function(done) {
-        expect(Neo4j.escapeIdentifier('a_:b c\'d')).to.equal('`a_:b c\'d`');
+        expect(Neo4j.escape('a_:b c\'d')).to.equal('`a_:b c\'d`');
         done();
     });
 
     it('Should escape backticks', function(done) {
-        expect(Neo4j.escapeIdentifier('a`b')).to.equal('`a``b`');
+        expect(Neo4j.escape('a`b')).to.equal('`a``b`');
         done();
     });
 });

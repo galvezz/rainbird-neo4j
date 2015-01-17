@@ -2,9 +2,8 @@
 https://codeship.com/projects/415e09a0-71a3-0132-22e9-028f765b4235/status?branch=master
 
 Thin wrapper around the [Neo4j Transactional Cypher HTTP][REST] REST endpoint
-(specifically `/db/data/transaction/commit`) that adds the ability to perform
-transactions and client side substitutions in queries. It also returns results
-in a slightly saner fashion than the raw endpoint.
+that adds the ability to perform client side substitutions in queries. It also
+returns results in a slightly saner fashion than the raw endpoint.
 
 ## Installation
 
@@ -29,14 +28,22 @@ db.query('MATCH (n) RETURN n', function(err, results) {
 
 ## Queries
 
-All functions that can perform queries accept these in the same format. At its
-most basic a query is just a query string. Providing a parameters object with
-the query string allows for queries with parameters. See the [Neo4j
-documentation on parameters][parameters] for more details on the _parameters
-object_.
+All functions that can perform queries accept them in the same format. At its
+most basic a query is just a query string. A query string can also be presented
+as an array of strings. These will be concatenated into a single query string.
+
+Providing a parameters object with the query string allows for queries with
+parameters. See the [Neo4j documentation on parameters][parameters] for more
+details on the _parameters object_.
+
+Providing a substitutions object with the query string allows for
+[substitutions](#substitutions) to be performed on the query string. **Note:**
+If only one object is passed to a query it's assumed to be a parameters object.
 
 Multiple queries can be run from a single function call by providing them as
-_statement_.
+_[statements](#statements)_. Statements do not support
+[substitutions](#substitutions). Use the `[compose](#compose)` function if you
+need a to perform substitutions on elements in a statements object.
 
 ## <a name="statements"></a>Statements
 
@@ -44,14 +51,43 @@ _Statements_ are an array of _statement objects_ which themselves contain a
 `statement` property and a `parameters` property. `statement` is any valid
 Cypher statement. `parameters` is a [parameters object][parameters].
 
+## <a name="substitutions"></a>Client Side Parameters (Substitutions)
+
+Client side parameters, or _substitutions_, are simply a convenience mechanism
+that allow complex query strings to be reused within the code by use of
+substitutions. _Substitutions_ do not provide the performance gains that normal
+parameters give as they are parsed out before being sent to Neo4j.
+
+Substitutions are defined in the query string using the format `${var}`. The
+substitution will be replaced with the value of `var` in the _substitutions
+object_.
+
+For example, the following code:
+
+```javascript
+var template = `MATCH (:${foo} {value: {value}})`;
+var substitutions = { 'foo': 'Baz'};
+var parameters = { 'value': 'bar' };
+neo4j.query(template, substitutions, parameters, callback);
+```
+
+Will pass the following statement object to Neo4J:
+
+```JSON
+[{
+    "statement": "MATCH(:Baz {value: {value}})",
+    "parameters": { "value": "bar" }
+}]
+```
+
 ## Transactions
 
 Queries are always run within the context of a transaction. Where transactions
-are not explicitly stated then the queries will be wrapped in a _begin_ and
-_commit_. Any errors will cause the transaction to _rollback_.
+are not explicitly stated the queries will be wrapped in a _begin_ and _commit_.
+Any errors will cause the transaction to _rollback_.
 
 For transactions that span multiple function calls a call to `begin` will open
-a transaction and return a transaction ID. This can then be used to run multiple
+a transaction and return a transaction ID. This is then used to run multiple
 queries before `commit` or `rollback` are called. Both `begin` and `commit` can
 also run queries.
 
@@ -181,6 +217,13 @@ contains the current transaction ID. This is set by a call to `begin`.
 
 ## Functions
 
+All functions that accept a `queryString` will also accept an array of query
+strings. These will be concatenated into a single query and composed into a
+statement. If a _substitutions_ object is provided then
+[substitutions](#substitutions) will also be performed. If
+[substitutions](#substitutions) are requires for [statements](#statements) the
+`compose` function should be used.
+
 ### `begin`
 
 Begin a transaction and optionally run a query in that transaction. The returned
@@ -188,9 +231,10 @@ transaction ID should be used for all future calls involving the transaction.
 
 ```javascript
 begin(callback)
-begin(transactionID, queryString, callback)
-begin(transactionID, queryString, parameters, callback)
-begin(transactionID, statements, callback)
+begin(queryString, callback)
+begin(queryString, parameters, callback)
+begin(queryString, substitutions, parameters, callback)
+begin(statements, callback)
 ```
 
 ### `query`
@@ -200,6 +244,7 @@ Run a query, either as a single transaction, or part of a larger transaction.
 ```javascript
 query(queryString, callback)
 query(queryString, parameters, callback)
+query(queryString, substitutions, parameters, callback)
 query(statements, callback)
 ```
 
@@ -207,6 +252,7 @@ query(statements, callback)
 query(transactionID, callback)
 query(transactionID, queryString, callback)
 query(transactionID, queryString, parameters, callback)
+query(transactionID, queryString, substitutions, parameters, callback)
 query(transactionID, statements, callback)
 ```
 
@@ -224,6 +270,7 @@ closed.
 commit(transactionID, callback)
 commit(transactionID, queryString, callback)
 commit(transactionID, queryString, parameters, callback)
+commit(transactionID, queryString, substitutions, parameters, callback)
 commit(transactionID, statements, callback)
 ```
 
@@ -236,7 +283,7 @@ set.
 rollback(transactionID, callback)
 ```
 
-## `resetTimeout`
+### `resetTimeout`
 
 Reset the timeout on a transaction without performing a query. Synonym for
 `query(transactionID, callback)`.
@@ -245,65 +292,13 @@ Reset the timeout on a transaction without performing a query. Synonym for
 resetTimeout(transactionID, callback)
 ```
 
-### `buildStatement`
+### <a name="compose"></a>`compose`
 
-The `buildStatement` function is a synchronous helper function that will
-construct a valid _statement object_ for inclusion in an array of
-[statements](statements). It also allows for the use of client side parameters.
-Client side parameters, or _substitutions_, are simply a convenience mechanism
-that allow complex query strings to be reused within the code by use of
-substitutions. _Substitutions_ do not provide the performance gains that normal
-parameters give as they are parsed out before being sent to Neo4j.
+The `compose` function is a synchronous helper function that will construct a
+valid _statement object_ for inclusion in an array of [statements](#statements).
+It also allows for the use of [substitutions](#substitutions)
 
-Substitutions are defined in the query string using the format `${var}`. The
-substitution will be replaced with the value of `var` in the _substitutions
-object_.
-
-For example, the following code:
-
-```
-var template = `MATCH (:${foo} {value: {value}})`;
-var substitutions = { 'foo': 'Baz'};
-var parameters = { 'value': 'bar' };
-var statement = Neo4j.buildStatement(template, substitutions, parameters);
-```
-
-Will yield the following object for `statement`:
-
-```
-{
-    statement: "MATCH(:Baz {value: {value}})",
-    parameters: { value: "bar" }
-}
-```
-
-The `buildStatement` can be called in one of 6 ways:
-
-```javascript
-Neo4j.buildStatement(string)
-Neo4j.buildStatement(string, parameters)
-Neo4j.buildStatement(string, substitutions, parameters)
-Neo4j.buildStatement(array)
-Neo4j.buildStatement(array, parameters)
-Neo4j.buildStatement(array, substitutions, parameters)
-```
-
-Where:
-
-* `string` is a valid Cypher query string with any substitutions defined.
-* `array` is an array of strings which will be concatenated together with
-   newlines, and should form a valid Cypher query string with any substitutions
-   defined.
-* `substitutions` is an object containing values for all the defined
-   substitutions
-* `parameters` is a valid _parameters object_. See the
-   [Neo4j documentation on parameters][parameters] for more details on the
-   _parameters object_
-
-The output from `buildStatement` should be added to an array to form
-[statements](statements).
-
-### Escaping Identifiers
+### `escape`
 
 Identifiers in Neo4j follow the following basic rules:
 
@@ -316,7 +311,7 @@ Backticks themselves can be escaped using a backtick. Identifiers can be easily
 escaped using:
 
 ```javascript
-var identifier = Neo4j.escapeIdentifier('a complex identifier`);
+var identifier = Neo4j.escape('a complex identifier`);
 ```
 
 ## Testing

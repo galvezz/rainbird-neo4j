@@ -1,5 +1,5 @@
 var request = require('request');
-var parser = require('./lib/argumentParser.js');
+var parser = require('./lib/arguments.js');
 
 // The Rainbird Neo4j package gives a very thin wrapper around the Neo4J REST
 // API and exposes this as an object. When you instantiate a new Neo4j object 
@@ -42,12 +42,93 @@ function mapResults(results) {
     return mappedResults;
 }
 
+// `rainbird-neo4j` supports the ability to perform client side substitutions,
+// that is replace placeholders in Cypher with other text. Client side
+// substitutions work in a similar way to parameters, except they can exist
+// anywhere in the query string, and are denoted using `${var}` rather than
+// `{var}`.
+
+function performSubstitutions(query, substitutions) {
+    for (var substitution in substitutions) {
+        /* istanbul ignore else  */
+        if (substitutions.hasOwnProperty(substitution)) {
+            var regex = new RegExp('\\$\\{' + substitution + '}', 'g');
+            query = query.replace(regex, substitutions[substitution]);
+        }
+    }
+
+    return query;
+}
+
+// Substitutions are performed as part of composing statements from queries,
+// substitutions and properties. The `compose` function will take a string along
+// with optional `substitution` and `parameters` objects and pass a statement
+// object to the callback. This statement object can then be added to an array
+// and passed to Neo4j through `query`, `begin` or `commit`. If only one object
+// is given it is assumed to be a parameters object
+//
+// For example, the following code:
+//
+// ```javascript
+// var template = `MATCH (:${foo} {value: {value}})`;
+// var substitutions = { 'foo': 'Baz'};
+// var parameters = { 'value': 'bar' };
+// Neo4j.compose(template, substitutions, parameters, callback);
+// ```
+//
+// Will pass the following statement object to Neo4J:
+//
+// ```JSON
+// [{
+//    "statement": "MATCH(:Baz {value: {value}})",
+//    "parameters": { "value": "bar" }
+// }]
+// ```
+
+function compose() {
+    parser.parse(arguments, function(args) {
+        var statement = {
+            'statement': performSubstitutions(args.query, args.substitutions),
+            'parameters': args.parameters
+        };
+
+        var matches = statement.statement.match(/\$\{[^}]*?}/g);
+
+        if (matches) {
+            var message = 'Error, unmatched parameter';
+            message += matches.length > 1 ? 's: ' : ': ';
+            message += matches.join(', ');
+            return args.callback(new Error(message));
+        }
+
+        args.callback(null, statement);
+    });
+}
+
+// Identifiers in Neo4j follow the following basic rules:
+//
+//    * case sensitive
+//    * can contain underscores and alphanumeric characters ([a-zA-Z0-9_])
+//    * must always start with a letter. ([a-zA-Z]+[a-zA-Z0-9_]*)
+//
+// More complex identifiers can be quoted using backtick (`) characters.
+// Backticks themselves can be escaped using a backtick. To avoid complex
+// pattern matching on a string we simply assume all identifiers need to be
+// quoted by escaping backticks and surrounding the string in backticks.
+
+function escape(string) {
+    var result = string.replace(/`/g, '``');
+    return '`' + result + '`';
+}
+
 // To run a query you can either provide a Cypher statement as a string and
-// an optional parameters object along with a callback, or you can provide
-// an array of statement objects. Each statement object should contain a
-// statement property, which will be the Cypher statement, and a parameters
-// object. The callback is passed any errors, and the results of the query or
-// queries.
+// an optional parameters object, or you can provide an array of statement
+// objects. For transactions spanning queries a transaction ID must be provided.
+// The last argument is a callback.
+//
+// Each statement object should contain a statement property, which will be the
+// Cypher statement, and a parameters object. The callback is passed any errors,
+// and the results of the query or queries.
 //
 // The following are all valid:
 //
@@ -82,8 +163,35 @@ function mapResults(results) {
 // );
 // ```
 //
-// Calls to `query` are wrapped in a transaction so if a single query fails in
-// a list of queries then all the queries will be rolled back.
+// The complete set of valid ways to call `query` is:
+//
+// ```
+// query(string, callback)
+// query(string, parameters, callback)
+// query(string, substitutions, parameters, callback)
+// query(array, callback)
+// query(array, parameters, callback)
+// query(array, substitutions, parameters, callback)
+// query(transactionID, string, callback)
+// query(transactionID, string, parameters, callback)
+// query(transactionID, string, substitutions, parameters, callback)
+// query(transactionID, array, callback)
+// query(transactionID, array, parameters, callback)
+// query(transactionID, array, substitutions, parameters, callback)
+// ```
+//
+// where:
+//
+// * `string` is a query string
+// * `array` is an array of query strings or statement objects
+// * `parameters` is a parameters `object`
+// * `substitutions` is a substitutions `object`
+// * `transactionID` is an `integer`
+// * `callback` is a `function`
+//
+// If `query` is called without a transaction ID then it is wrapped in single a
+// transaction so if a single query fails in a list of queries then all the
+// queries will be rolled back.
 
 Neo4j.prototype.query = function(statement, parameters, callback) {
 
@@ -123,82 +231,25 @@ Neo4j.prototype.query = function(statement, parameters, callback) {
     );
 };
 
-// In order to simplify building statement objects the `buildStatement` function
-// is provided. It will take a string, or an array of strings, an object
-// containing client side substitutions and an object containing server side
-// parameters. In the case where the query is presented as an array of strings
-// the array is simply concatenated together with newlines.
-//
-// Client side substitutions work in a similar fashion to the server side
-// parameters except they are denoted using `${var}` rather than `{var}`, and
-// they confer no performance gains - they simply act as a convenience that
-// allows for greater parametrisation than vanilla Neo4J queries. The function
-// returns a valid statement object that can be used in a list with `query`.
+Neo4j.prototype.begin = function() {
+    throw new Error('Not implemented yet');
+};
 
-// For example, the following code:
-//
-// ```
-// var template = `MATCH (:${foo} {value: {value}})`;
-// var substitutions = { 'foo': 'Baz'};
-// var parameters = { 'value': 'bar' };
-// var statement = Neo4j.buildStatement(template, substitutions, parameters);
-// ```
-//
-// Will yield the following object for `statement`:
-//
-// ```
-// {
-//     statement: "MATCH(:Baz {value: {value}})",
-//     parameters: { value: "bar" }
-// }
-// ```
+Neo4j.prototype.commit = function() {
+    throw new Error('Not implemented yet');
+};
 
-// If only one object is given it is assumed to be a parameters object
+Neo4j.prototype.rollback = function() {
+    throw new Error('Not implemented yet');
+};
 
-function buildStatement() {
-    var args = parser.parseBuildStatementArguments(arguments);
-    var statement = args.statement;
-
-    for (var substitution in args.substitutions) {
-        /* istanbul ignore else  */
-        if (args.substitutions.hasOwnProperty(substitution)) {
-            var regex = new RegExp('\\$\\{' + substitution + '}', 'g');
-            statement =
-                statement.replace(regex, args.substitutions[substitution]);
-        }
-    }
-
-    var matches = statement.match(/\$\{[^}]*?}/g);
-
-    if (matches) {
-        var message = 'Error, unmatched parameter';
-        message += matches.length > 1 ? 's: ' : ': ';
-        message += matches.join(', ');
-        throw new Error(message);
-    }
-
-    return { 'statement': statement, 'parameters': args.parameters };
-}
-
-// Identifiers in Neo4j follow the following basic rules:
-//
-//    * case sensitive
-//    * can contain underscores and alphanumeric characters ([a-zA-Z0-9_])
-//    * must always start with a letter. ([a-zA-Z]+[a-zA-Z0-9_]*)
-//
-// More complex identifiers can be quoted using backtick (`) characters.
-// Backticks themselves can be escaped using a backtick. To avoid complex
-// pattern matching on a string we simply assume all identifiers need to be
-// quoted by escaping backticks and surrounding the string in backticks.
-
-function escapeIdentifier(string) {
-    var result = string.replace(/`/g, '``');
-    return '`' + result + '`';
-}
+Neo4j.prototype.resetTimeout = function(transactionID, callback) {
+    query(transactionID, callback);
+};
 
 module.exports = Neo4j;
-module.exports.buildStatement = buildStatement;
-module.exports.escapeIdentifier = escapeIdentifier;
+module.exports.compose = compose;
+module.exports.escape = escape;
 
 // ## License
 //
