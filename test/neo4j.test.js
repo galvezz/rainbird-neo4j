@@ -114,13 +114,13 @@ describe('Neo4j wrapper', function() {
                 }
             ];
 
-            db.query('test', function(err, results) {
-                expect(err).to.have.property('statements');
+            db.query('test', function(err, results, info) {
                 expect(err).to.have.property('message');
-                expect(err).to.have.property('errors');
+                expect(info).to.have.property('statements');
+                expect(info).to.have.property('errors');
 
-                expect(err.errors).to.be.an('array');
-                expect(err.errors).to.have.length(2);
+                expect(info.errors).to.be.an('array');
+                expect(info.errors).to.have.length(2);
 
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
@@ -138,17 +138,67 @@ describe('Neo4j wrapper', function() {
 
             Neo4j.__set__('request', mock);
 
-            db.query('test', function(err, results) {
-                expect(err).to.be.ok();
-                expect(err).to.have.property('statements');
+            db.query('test', function(err, results, info) {
                 expect(err).to.have.property('message', 'Error');
-                expect(err).to.have.property('errors');
+                expect(info).to.have.property('statements');
+                expect(info).to.have.property('errors');
 
-                expect(err.errors).to.be.an('array');
-                expect(err.errors).to.have.length(0);
+                expect(info.errors).to.be.an('array');
+                expect(info.errors).to.have.length(0);
 
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
+
+                done();
+            });
+        });
+    });
+
+    describe('when running in a transaction', function() {
+        var db;
+        var errors = [];
+
+        before(function(done) {
+            Neo4j.__set__({
+                'request': {
+                    'post': function(args, callback) {
+                        callback(null,
+                            {
+                                'body': {
+                                    'results': args,
+                                    'errors': errors,
+                                    'transaction': {
+                                        'expires': 'expiry'
+                                    }
+                                }
+                            });
+                    }
+                },
+                'mapResults': function(results) { return results; }
+            });
+
+            db = new Neo4j('http://localhost:7474');
+
+            done();
+        });
+
+        it('should set the transaction details', function(done) {
+            db.query(1, 'test', function(err, results) {
+                expect(err).to.not.be.ok();
+                expect(results).to.have.property('uri');
+                expect(results).to.have.property('json');
+
+                var json = results.json;
+
+                expect(json).to.have.property('statements');
+                expect(json.statements).to.be.an('array');
+                expect(json.statements).to.have.length(1);
+
+                var result = json.statements[0];
+
+                expect(result).to.have.property('statement', 'test');
+                expect(result).to.have.property('parameters');
+                expect(result.parameters).to.be.empty();
 
                 done();
             });
@@ -170,6 +220,20 @@ describe('Neo4j wrapper', function() {
 
         it('should handle statements as arrays', function(done) {
             Neo4j.compose(['MATCH (n)', 'RETURN n'], function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n)\nRETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
+
+                done();
+            });
+        });
+
+        it('should handle statements as arrays of Strings', function(done) {
+            /* jshint ignore:start */
+            var array = [String('MATCH (n)'), String('RETURN n')];
+            /* jshint ignore:end */
+            Neo4j.compose(array, function(err, statement) {
                 expect(statement).to.have.property('statement',
                     'MATCH (n)\nRETURN n');
                 expect(statement).to.have.property('parameters');
@@ -213,7 +277,7 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should error if undefined substitutions are used', function(done) {
-            Neo4j.compose('MATCH (${x}) RETURN ${y}', { 'x': 'n' }, {},
+            Neo4j.compose('MATCH (${x}) RETURN ${y}', {}, {},
                 function(err, statement) {
                     expect(err).to.be.ok();
                     expect(statement).to.not.be.ok();
@@ -236,7 +300,7 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should allow just parameters to be passed', function(done) {
-            var parameters = {'a': 'b'};
+            var parameters = { 'a': 'b' };
             Neo4j.compose('test', parameters, function(err, statement) {
                 expect(statement).to.have.property('statement', 'test');
                 expect(statement).to.have.property('parameters', parameters);

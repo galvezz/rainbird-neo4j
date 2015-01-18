@@ -18,13 +18,16 @@ describe('Neo4j wrapper, when querying the database', function() {
     });
 
     it('should run a simple query with no parameters', function(done) {
-        db.query('CREATE (n)', function(err, results) {
+        db.query('CREATE (n)', function(err, results, info) {
             expect(err).to.not.be.ok();
             expect(results).to.be.an('array');
             expect(results).to.have.length(1);
 
             expect(results[0]).to.be.an('array');
             expect(results[0]).to.have.length(0);
+
+            expect(info).to.have.property('statements');
+            expect(info.statements).to.not.be.empty();
 
             done();
         });
@@ -91,20 +94,29 @@ describe('Neo4j wrapper, when querying the database', function() {
     });
 
     it('should error with bad queries', function(done) {
-        db.query('Duff query', {}, function(err, results) {
+        db.query('Duff query', {}, function(err, results, info) {
             expect(err).to.be.ok();
             expect(results).to.be.an('array');
             expect(results).to.have.length(0);
+
+            expect(info).to.have.property('errors');
+            expect(info.errors).to.not.be.empty();
+
             done();
         });
     });
 
     it('should pass errors through', function(done) {
         var error = new Neo4j('does not exist');
-        error.query('barf and die', {}, function(err, results) {
+        error.query('barf and die', {}, function(err, results, info) {
             expect(err).to.be.ok();
+
+            expect(info).to.have.property('errors');
+            expect(info.errors).to.be.empty();
+
             expect(results).to.be.an('array');
             expect(results).to.be.empty();
+
             done();
         });
 
