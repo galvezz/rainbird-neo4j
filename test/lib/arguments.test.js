@@ -278,7 +278,7 @@ describe('Parsing individual elements of arguments', function() {
 describe('Parsing arguments', function() {
     it('should work with fn(string, fn)', function(done) {
         var callback = function() {};
-        args.parse(['query', callback], function(output) {
+        args.parse(['query', callback], function(err, output) {
             expect(output).to.have.property('query', 'query');
             expect(output).to.have.property('callback', callback);
 
@@ -299,7 +299,7 @@ describe('Parsing arguments', function() {
     it('should work with fn(array:obj, fn)', function(done) {
         var callback = function() {};
         var array = [{ 'statement': 'query'} ];
-        args.parse([array, callback], function(output) {
+        args.parse([array, callback], function(err, output) {
             expect(output).to.have.property('callback', callback);
 
             expect(output).to.have.property('parameters');
@@ -316,7 +316,7 @@ describe('Parsing arguments', function() {
 
     it('should work with fn(int, fn)', function(done) {
         var callback = function() {};
-        args.parse([1, callback], function(output) {
+        args.parse([1, callback], function(err, output) {
             expect(output).to.have.property('transactionID', 1);
             expect(output).to.have.property('callback', callback);
 
@@ -334,7 +334,7 @@ describe('Parsing arguments', function() {
     it('should work with fn(string, obj, fn)', function(done) {
         var callback = function() {};
         var parameters = { 'foo': 'bar' };
-        args.parse(['query', parameters, callback], function(output) {
+        args.parse(['query', parameters, callback], function(err, output) {
             expect(output).to.have.property('query', 'query');
             expect(output).to.have.property('callback', callback);
 
@@ -355,7 +355,7 @@ describe('Parsing arguments', function() {
     it('should work with fn(int, array:obj, fn)', function(done) {
         var callback = function() {};
         var array = [{ 'statement': 'foo' }];
-        args.parse([1, array, callback], function(output) {
+        args.parse([1, array, callback], function(err, output) {
             expect(output).to.have.property('transactionID', 1);
             expect(output).to.have.property('statements');
             expect(output).to.have.property('callback', callback);
@@ -373,7 +373,7 @@ describe('Parsing arguments', function() {
 
     it('should work with fn(int, string, fn)', function(done) {
         var callback = function() {};
-        args.parse([1, 'query', callback], function(output) {
+        args.parse([1, 'query', callback], function(err, output) {
             expect(output).to.have.property('transactionID', 1);
             expect(output).to.have.property('query', 'query');
             expect(output).to.have.property('callback', callback);
@@ -395,7 +395,7 @@ describe('Parsing arguments', function() {
     it('should work with fn(int, string, obj, fn)', function(done) {
         var callback = function() {};
         var parameters = { 'foo': 'bar' };
-        args.parse([1, 'query', parameters, callback], function(output) {
+        args.parse([1, 'query', parameters, callback], function(err, output) {
             expect(output).to.have.property('transactionID', 1);
             expect(output).to.have.property('query', 'query');
             expect(output).to.have.property('callback', callback);
@@ -419,7 +419,7 @@ describe('Parsing arguments', function() {
         var parameters = { 'foo': 'bar' };
         var substitutions = { 'foobar': 'baz' };
         args.parse(['query', substitutions, parameters, callback],
-            function(output) {
+            function(err, output) {
                 expect(output).to.have.property('query', 'query');
                 expect(output).to.have.property('callback', callback);
 
@@ -436,7 +436,7 @@ describe('Parsing arguments', function() {
 
     it('should work with fn(array:string, fn)', function(done) {
         var callback = function() {};
-        args.parse([['query', 'string'], callback], function(output) {
+        args.parse([['query', 'string'], callback], function(err, output) {
             expect(output).to.have.property('query', 'query\nstring');
             expect(output).to.have.property('callback', callback);
 
@@ -454,7 +454,7 @@ describe('Parsing arguments', function() {
         var callback = function() {};
         var parameters = { 'foo': 'bar' };
         args.parse([['query', 'string'], parameters, callback],
-            function(output) {
+            function(err, output) {
                 expect(output).to.have.property('query', 'query\nstring');
                 expect(output).to.have.property('callback', callback);
 
@@ -474,7 +474,7 @@ describe('Parsing arguments', function() {
         var parameters = { 'foo': 'bar' };
         var substitutions = { 'foobar': 'baz' };
         args.parse([['query', 'string'], substitutions, parameters, callback],
-            function(output) {
+            function(err, output) {
                 expect(output).to.have.property('query', 'query\nstring');
                 expect(output).to.have.property('callback', callback);
 
