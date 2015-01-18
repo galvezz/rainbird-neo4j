@@ -269,21 +269,17 @@ describe('Neo4j wrapper', function() {
         });
 
         it('should error if an undefined substitution is used', function(done) {
-            Neo4j.compose('MATCH (${x}) RETURN n', function(err, statement) {
+            Neo4j.compose('MATCH (${x}) RETURN n', function(err) {
                 expect(err).to.be.ok();
-                expect(statement).to.not.be.ok();
                 done();
             });
         });
 
         it('should error if undefined substitutions are used', function(done) {
-            Neo4j.compose('MATCH (${x}) RETURN ${y}', {}, {},
-                function(err, statement) {
+            Neo4j.compose('MATCH (${x}) RETURN ${y}', {}, {}, function(err) {
                     expect(err).to.be.ok();
-                    expect(statement).to.not.be.ok();
                     done();
-                }
-            );
+            });
         });
 
         it('should add parameter object', function(done) {
