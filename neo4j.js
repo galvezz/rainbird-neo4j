@@ -212,8 +212,8 @@ Neo4j.prototype.query = function() {
     });
 };
 
-// Begin a transaction, optionally running a query. See `query` for full details
-// on running queries.
+// Begin a transaction, optionally running a query once the transaction is optn.
+// See `query` for full details on running queries.
 //
 // The complete set of valid ways to call `begin` is:
 //
@@ -224,18 +224,115 @@ Neo4j.prototype.query = function() {
 // begin(array, callback)
 // begin(array, parameters, callback)
 // begin(array, substitutions, parameters, callback)
+// ```
+//
+// where:
+//
+// * `string` is a query string
+// * `array` is an array of query strings or statement objects
+// * `parameters` is a parameters `object`
+// * `substitutions` is a substitutions `object`
+// * `callback` is a `function`
 
 Neo4j.prototype.begin = function() {
-    throw new Error('Not implemented yet');
+    var uri = this.neo4j;
+
+    parser.parse(arguments, function(err, args) {
+        var info = {
+            'statements': args.statements,
+            'errors': []
+        };
+
+        if (err) {
+            return args.callback(err, [], info);
+        }
+
+        request.post(
+            { 'uri': uri, 'json': { 'statements': args.statements } },
+            function(err, results) {
+                parseResults(err, results, info, args.callback);
+            }
+        );
+    });
 };
+
+// Commit a transaction, optionally running a query before the commit. See
+// `query` for full details on running queries.
+//
+// The complete set of valid ways to call `commit` is:
+//
+// ```
+// commit(transactionID, string, callback)
+// commit(transactionID, string, parameters, callback)
+// commit(transactionID, string, substitutions, parameters, callback)
+// commit(transactionID, array, callback)
+// commit(transactionID, array, parameters, callback)
+// commit(transactionID, array, substitutions, parameters, callback)
+// ```
+//
+// where:
+//
+// * `string` is a query string
+// * `array` is an array of query strings or statement objects
+// * `parameters` is a parameters `object`
+// * `substitutions` is a substitutions `object`
+// * `transactionID` is an `integer`
+// * `callback` is a `function`
 
 Neo4j.prototype.commit = function() {
-    throw new Error('Not implemented yet');
+    var uri = this.neo4j;
+
+    parser.parse(arguments, function(err, args) {
+        var info = {
+            'statements': args.statements,
+            'errors': []
+        };
+
+        if (err) {
+            return args.callback(err, [], info);
+        }
+
+        if (args.transactionID) {
+            info.transactionID = args.transactionID;
+            uri += args.transactionID + '/commit';
+        } else {
+            var error = new Error('No transaction ID supplied to commit');
+            return args.callback(error, [], info);
+        }
+
+        request.post(
+            { 'uri': uri, 'json': { 'statements': args.statements } },
+            function(err, results) {
+                parseResults(err, results, info, args.callback);
+            }
+        );
+    });
 };
 
-Neo4j.prototype.rollback = function() {
-    throw new Error('Not implemented yet');
+// Rollback an existing transaction.
+
+Neo4j.prototype.rollback = function(transactionID, callback) {
+    var uri = this.neo4j;
+
+    var info = {
+        'statements': [],
+        'errors': []
+    };
+
+    if (transactionID) {
+        info.transactionID = transactionID;
+        uri += transactionID;
+    } else {
+        var error = new Error('No transaction ID supplied to commit');
+        return callback(error, [], info);
+    }
+
+    request.del(uri, function(err, results) {
+        parseResults(err, results, info, callback);
+    });
 };
+
+// Reset the timeout on a transaction by sending an empty query.
 
 Neo4j.prototype.resetTimeout = function(transactionID, callback) {
     query(transactionID, callback);
