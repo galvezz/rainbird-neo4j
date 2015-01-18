@@ -64,24 +64,6 @@ function parseResults(err, results, info, callback) {
     }
 }
 
-// `rainbird-neo4j` supports the ability to perform client side substitutions,
-// that is replace placeholders in Cypher with other text. Client side
-// substitutions work in a similar way to parameters, except they can exist
-// anywhere in the query string, and are denoted using `${var}` rather than
-// `{var}`.
-
-function performSubstitutions(query, substitutions) {
-    for (var substitution in substitutions) {
-        /* istanbul ignore else  */
-        if (substitutions.hasOwnProperty(substitution)) {
-            var regex = new RegExp('\\$\\{' + substitution + '}', 'g');
-            query = query.replace(regex, substitutions[substitution]);
-        }
-    }
-
-    return query;
-}
-
 // Substitutions are performed as part of composing statements from queries,
 // substitutions and properties. The `compose` function will take a string along
 // with optional `substitution` and `parameters` objects and pass a statement
@@ -108,22 +90,8 @@ function performSubstitutions(query, substitutions) {
 // ```
 
 function compose() {
-    parser.parse(arguments, function(args) {
-        var statement = {
-            'statement': performSubstitutions(args.query, args.substitutions),
-            'parameters': args.parameters
-        };
-
-        var matches = statement.statement.match(/\$\{[^}]*?}/g);
-
-        if (matches) {
-            var message = 'Error, unmatched parameter';
-            message += matches.length > 1 ? 's: ' : ': ';
-            message += matches.join(', ');
-            return args.callback(new Error(message));
-        }
-
-        args.callback(null, statement);
+    parser.parse(arguments, function(err, args) {
+        args.callback(err, args.statements[0]);
     });
 }
 
@@ -218,11 +186,15 @@ function escape(string) {
 Neo4j.prototype.query = function() {
     var uri = this.neo4j;
 
-    parser.parse(arguments, function(args) {
+    parser.parse(arguments, function(err, args) {
         var info = {
             'statements': args.statements,
             'errors': []
         };
+
+        if (err) {
+            return args.callback(err, [], info);
+        }
 
         if (args.transactionID) {
             info.transactionID = args.transactionID;
@@ -239,6 +211,19 @@ Neo4j.prototype.query = function() {
         );
     });
 };
+
+// Begin a transaction, optionally running a query. See `query` for full details
+// on running queries.
+//
+// The complete set of valid ways to call `begin` is:
+//
+// ```
+// begin(string, callback)
+// begin(string, parameters, callback)
+// begin(string, substitutions, parameters, callback)
+// begin(array, callback)
+// begin(array, parameters, callback)
+// begin(array, substitutions, parameters, callback)
 
 Neo4j.prototype.begin = function() {
     throw new Error('Not implemented yet');
