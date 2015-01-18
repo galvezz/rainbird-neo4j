@@ -144,7 +144,24 @@ describe('Neo4j wrapper', function() {
                 expect(info).to.have.property('errors');
 
                 expect(info.errors).to.be.an('array');
-                expect(info.errors).to.have.length(0);
+                expect(info.errors).to.be.empty();
+                expect(info.errors).to.be.empty();
+
+                expect(results).to.be.an('array');
+                expect(results).to.be.empty();
+
+                done();
+            });
+        });
+
+        it('should pass errors from the parser through', function(done) {
+            db.query('${error}', function(err, results, info) {
+                expect(err).to.have.property('message');
+                expect(info).to.have.property('statements');
+                expect(info).to.have.property('errors');
+
+                expect(info.errors).to.be.an('array');
+                expect(info.errors).to.be.empty();
 
                 expect(results).to.be.an('array');
                 expect(results).to.be.empty();
