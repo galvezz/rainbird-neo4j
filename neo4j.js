@@ -328,13 +328,8 @@ Neo4j.prototype.rollback = function(transactionID, callback) {
         'errors': []
     };
 
-    if (transactionID) {
-        info.transactionID = transactionID;
-        uri += transactionID;
-    } else {
-        var error = new Error('No transaction ID supplied to commit');
-        return callback(error, [], info);
-    }
+    info.transactionID = transactionID;
+    uri += transactionID;
 
     request.del(uri, function(err, results) {
         parseResults(err, results, info, callback);
@@ -344,7 +339,7 @@ Neo4j.prototype.rollback = function(transactionID, callback) {
 // Reset the timeout on a transaction by sending an empty query.
 
 Neo4j.prototype.resetTimeout = function(transactionID, callback) {
-    query(transactionID, callback);
+    Neo4j.prototype.query(transactionID, callback);
 };
 
 module.exports = Neo4j;
