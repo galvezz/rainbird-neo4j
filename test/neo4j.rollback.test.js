@@ -7,16 +7,20 @@ describe('The rollback function', function() {
 
     var db;
     var errors = [];
-    var uri = 'http://localhost/db/data/transaction/1/rollback';
 
     before(function(done) {
+        db = new Neo4j('http://localhost:7474');
+        done();
+    });
+
+    beforeEach(function(done) {
         Neo4j.__set__({
             'request': {
-                'del': function(uri, callback) {
+                'del': function(url, callback) {
                     callback(null,
                         {
                             'body': {
-                                'results': { 'uri': uri },
+                                'results': { 'uri': url },
                                 'errors': errors
                             }
                         }
@@ -25,8 +29,6 @@ describe('The rollback function', function() {
             },
             'mapResults': function(results) { return results; }
         });
-
-        db = new Neo4j('http://localhost:7474');
 
         done();
     });

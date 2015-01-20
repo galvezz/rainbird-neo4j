@@ -10,6 +10,11 @@ describe('The commit function', function() {
     var uri = 'http://localhost/db/data/transaction/1/commit';
 
     before(function(done) {
+        db = new Neo4j('http://localhost:7474');
+        done();
+    });
+
+    beforeEach(function(done) {
         Neo4j.__set__({
             'request': {
                 'post': function(args, callback) {
@@ -29,8 +34,6 @@ describe('The commit function', function() {
             },
             'mapResults': function(results) { return results; }
         });
-
-        db = new Neo4j('http://localhost:7474');
 
         done();
     });
@@ -218,7 +221,7 @@ describe('The commit function', function() {
     });
 
     it('should error if no transaction ID is provided', function(done) {
-        db.commit(1, 'test', function(err, results, info) {
+        db.commit('test', function(err, results, info) {
             expect(err).to.be.ok();
 
             expect(info).to.not.have.property('transactionID');

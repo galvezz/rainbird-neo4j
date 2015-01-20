@@ -10,6 +10,11 @@ describe('The query function', function() {
         var errors = [];
 
         before(function(done) {
+            db = new Neo4j('http://localhost:7474');
+            done();
+        });
+
+        beforeEach(function(done) {
             Neo4j.__set__({
                 'request': {
                     'post': function(args, callback) {
@@ -19,8 +24,6 @@ describe('The query function', function() {
                 },
                 'mapResults': function(results) { return results; }
             });
-
-            db = new Neo4j('http://localhost:7474');
 
             done();
         });
@@ -177,6 +180,11 @@ describe('The query function', function() {
         var uri = 'http://localhost/db/data/transaction/1/commit';
 
         before(function(done) {
+            db = new Neo4j('http://localhost:7474');
+            done();
+        });
+
+        beforeEach(function(done) {
             Neo4j.__set__({
                 'request': {
                     'post': function(args, callback) {
@@ -196,8 +204,6 @@ describe('The query function', function() {
                 },
                 'mapResults': function(results) { return results; }
             });
-
-            db = new Neo4j('http://localhost:7474');
 
             done();
         });
