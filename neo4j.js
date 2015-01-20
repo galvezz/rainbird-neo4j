@@ -1,6 +1,8 @@
 var request = require('request');
 var parser = require('./lib/arguments.js');
 
+var regexp = /.*\/db\/data\/transaction\/(\d)+\/commit.*/;
+
 // The Rainbird Neo4j package gives a very thin wrapper around the Neo4J REST
 // API and exposes this as an object. When you instantiate a new Neo4j object 
 // you need to tell it where Neo4j lives. The URI will be something along the 
@@ -53,6 +55,15 @@ function parseResults(err, results, info, callback) {
 
     if (results.body.transaction) {
         info.timeout = results.body.transaction.expires;
+    }
+
+    if (results.body.commit) {
+        info.transactionID = parseInt(
+            results.body.commit.replace(regexp, '$1'));
+    }
+
+    if (info.transactionID && isNaN(info.transactionID)) {
+        callback('Invalid commit location: ' + results.body.commit, [], info);
     }
 
     if (results.body.errors.length > 0) {
@@ -197,7 +208,6 @@ Neo4j.prototype.query = function() {
         }
 
         if (args.transactionID) {
-            info.transactionID = args.transactionID;
             uri += args.transactionID;
         } else {
             uri += 'commit';
@@ -293,7 +303,6 @@ Neo4j.prototype.commit = function() {
         }
 
         if (args.transactionID) {
-            info.transactionID = args.transactionID;
             uri += args.transactionID + '/commit';
         } else {
             var error = new Error('No transaction ID supplied to commit');
