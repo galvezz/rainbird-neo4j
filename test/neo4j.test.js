@@ -218,4 +218,48 @@ describe('Neo4j wrapper', function() {
             done();
         });
     });
+
+    describe('when receiving results', function() {
+        var db;
+        var errors = [];
+        var uri = 'http://localhost/db/data/transaction/wrong/commit';
+
+        before(function(done) {
+            db = new Neo4j('http://localhost:7474');
+            done();
+        });
+
+        beforeEach(function(done) {
+            Neo4j.__set__({
+                'request': {
+                    'post': function(args, callback) {
+                        callback(null,
+                            {
+                                'body': {
+                                    'commit': uri,
+                                    'results': args,
+                                    'errors': errors,
+                                    'transaction': {
+                                        'expires': 'expiry'
+                                    }
+                                }
+                            }
+                        );
+                    }
+                },
+                'mapResults': function(results) { return results; }
+            });
+
+            done();
+        });
+
+        it('should handle an incorrect transaction ID', function(done) {
+            db.commit(1, function(err, results) {
+                expect(err).to.be.ok();
+                expect(results).to.be.empty();
+
+                done();
+            });
+        });
+    });
 });
