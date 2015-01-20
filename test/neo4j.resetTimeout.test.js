@@ -34,8 +34,8 @@ describe('The resetTimeout function', function() {
         done();
     });
 
-    it('should run a an empty querys', function(done) {
-        db.query(1, function(err, results) {
+    it('should run a an empty query', function(done) {
+        db.resetTimeout(1, function(err, results) {
             expect(err).to.not.be.ok();
             expect(results).to.have.property('uri');
             expect(results).to.have.property('json');
@@ -62,7 +62,7 @@ describe('The resetTimeout function', function() {
             }
         ];
 
-        db.query(1, function(err, results, info) {
+        db.resetTimeout(1, function(err, results, info) {
             expect(err).to.have.property('message');
             expect(info).to.have.property('statements');
             expect(info).to.have.property('errors');
@@ -86,7 +86,7 @@ describe('The resetTimeout function', function() {
 
         Neo4j.__set__('request', mock);
 
-        db.query(1, function(err, results, info) {
+        db.resetTimeout(1, function(err, results, info) {
             expect(err).to.have.property('message', 'Error');
             expect(info).to.have.property('statements');
             expect(info).to.have.property('errors');
