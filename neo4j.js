@@ -1,7 +1,7 @@
 var request = require('request');
 var parser = require('./lib/arguments.js');
 
-var regexp = /.*\/db\/data\/transaction\/(\d)+\/commit.*/;
+var regexp = /.*\/db\/data\/transaction\/(\d+)\/commit.*/;
 
 // The Rainbird Neo4j package gives a very thin wrapper around the Neo4J REST
 // API and exposes this as an object. When you instantiate a new Neo4j object 
@@ -62,11 +62,12 @@ function parseResults(err, results, info, callback) {
             results.body.commit.replace(regexp, '$1'));
     }
 
-    if (info.transactionID && isNaN(info.transactionID)) {
-        callback('Invalid commit location: ' + results.body.commit, [], info);
+    if (results.body.commit && isNaN(info.transactionID)) {
+        return callback('Invalid commit location: ' + results.body.commit, [],
+            info);
     }
 
-    if (results.body.errors.length > 0) {
+    if (results.body.errors && results.body.errors.length > 0) {
         var error = new Error('Error running query');
         info.errors = results.body.errors;
         callback(error, [], info);
