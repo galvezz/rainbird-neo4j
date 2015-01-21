@@ -49,7 +49,7 @@ function mapResults(results) {
 
 function parseResults(err, results, info, callback) {
     if (err) {
-        err.errors = [];
+        info.errors = [];
         return callback(err, [], info);
     }
 
