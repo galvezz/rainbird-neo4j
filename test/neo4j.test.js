@@ -4,240 +4,107 @@ var rewire = require('rewire');
 var Neo4j = rewire('../neo4j.js');
 
 describe('Neo4j wrapper', function() {
-    describe('when running a query (with mock request)', function() {
-
-        var db;
-        var errors = [];
-
-        before(function(done) {
-            Neo4j.__set__({
-                'request': {
-                    'post': function(args, callback) {
-                        callback(null,
-                            { 'body': { 'results': args, 'errors': errors } });
-                    }
-                },
-                'mapResults': function(results) { return results; }
-            });
-
-            db = new Neo4j('http://localhost:7474');
-
-            done();
-        });
-
-        it('should run a simple query with no parameters', function(done) {
-            db.query('test', function(err, results) {
-                expect(err).to.not.be.ok();
-                expect(results).to.have.property('uri');
-                expect(results).to.have.property('json');
-
-                var json = results.json;
-
-                expect(json).to.have.property('statements');
-                expect(json.statements).to.be.an('array');
-                expect(json.statements).to.have.length(1);
-
-                var result = json.statements[0];
-
-                expect(result).to.have.property('statement', 'test');
-                expect(result).to.have.property('parameters');
-                expect(result.parameters).to.be.empty();
-
-                done();
-            });
-        });
-
-        it('should run a single query with parameters', function(done) {
-            db.query('test', { 'param': 'value' }, function(err, results) {
-                expect(err).to.not.be.ok();
-                expect(results).to.have.property('uri');
-                expect(results).to.have.property('json');
-
-                var json = results.json;
-
-                expect(json).to.have.property('statements');
-                expect(json.statements).to.be.an('array');
-                expect(json.statements).to.have.length(1);
-
-                var result = json.statements[0];
-
-                expect(result).to.have.property('statement', 'test');
-                expect(result).to.have.property('parameters');
-                expect(result.parameters).to.have.property('param', 'value');
-
-                done();
-            });
-        });
-
-        it('should run a batch of queries', function(done) {
-            var statements = [
-                { 'statement': 'test1', 'parameters': { 'param1': 'value1' } },
-                { 'statement': 'test2', 'parameters': { 'param2': 'value2' } }
-            ];
-
-            db.query(statements, function(err, results) {
-                expect(err).to.not.be.ok();
-                expect(results).to.have.property('uri');
-                expect(results).to.have.property('json');
-
-                var json = results.json;
-
-                expect(json).to.have.property('statements');
-                expect(json.statements).to.be.an('array');
-                expect(json.statements).to.have.length(2);
-
-                var result = json.statements[0];
-
-                expect(result).to.have.property('statement', 'test1');
-                expect(result).to.have.property('parameters');
-                expect(result.parameters).to.have.property('param1', 'value1');
-
-                result = json.statements[1];
-
-                expect(result).to.have.property('statement', 'test2');
-                expect(result).to.have.property('parameters');
-                expect(result.parameters).to.have.property('param2', 'value2');
-
-                done();
-            });
-        });
-
-        it('should pass errors from Neo4j through', function(done) {
-            errors = [
-                {
-                    'code': 'Error code 1',
-                    'message': 'Error message 1'
-                },
-                {
-                    'code': 'Error code 2',
-                    'message': 'Error message 2'
-                }
-            ];
-
-            db.query('test', function(err, results) {
-                expect(err).to.have.property('statements');
-                expect(err).to.have.property('message');
-                expect(err).to.have.property('errors');
-
-                expect(err.errors).to.be.an('array');
-                expect(err.errors).to.have.length(2);
-
-                expect(results).to.be.an('array');
-                expect(results).to.be.empty();
-
-                done();
-            });
-        });
-
-        it('should pass errors from the request through', function(done) {
-            var mock = {
-                'post': function(args, callback) {
-                    callback(new Error('Error'));
-                }
-            };
-
-            Neo4j.__set__('request', mock);
-
-            db.query('test', function(err, results) {
-                expect(err).to.be.ok();
-                expect(err).to.have.property('statements');
-                expect(err).to.have.property('message', 'Error');
-                expect(err).to.have.property('errors');
-
-                expect(err.errors).to.be.an('array');
-                expect(err.errors).to.have.length(0);
-
-                expect(results).to.be.an('array');
-                expect(results).to.be.empty();
-
-                done();
-            });
-        });
-    });
-
     describe('when building a statement', function() {
 
         it('should work with just a template defined', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (n) RETURN n');
+            Neo4j.compose('MATCH (n) RETURN n', function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n) RETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                done();
+            });
         });
 
         it('should handle statements as arrays', function(done) {
-            var statement = Neo4j.buildStatement(['MATCH (n)', 'RETURN n']);
+            Neo4j.compose(['MATCH (n)', 'RETURN n'], function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n)\nRETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n)\nRETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
+                done();
+            });
+        });
 
-            done();
+        it('should handle statements as arrays of Strings', function(done) {
+            /* jshint ignore:start */
+            var array = [String('MATCH (n)'), String('RETURN n')];
+            /* jshint ignore:end */
+            Neo4j.compose(array, function(err, statement) {
+                expect(statement).to.have.property('statement',
+                    'MATCH (n)\nRETURN n');
+                expect(statement).to.have.property('parameters');
+                expect(statement.parameters).to.be.empty();
+
+                done();
+            });
         });
 
         it('should perform any given substitutions', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n' }, {});
+            Neo4j.compose('MATCH (${x}) RETURN ${x}', { 'x': 'n' }, {},
+                function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                    done();
+                }
+            );
         });
 
         it('should ignore extra definitions of substitutions', function(done) {
-            var statement = Neo4j.buildStatement('MATCH (${x}) RETURN ${x}',
-                { 'x': 'n', 'y': 'z' }, {});
+            Neo4j.compose('MATCH (${x}) RETURN ${x}', { 'x': 'n', 'y': 'z' },
+                {}, function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.be.empty();
 
-            expect(statement).to.have.property('statement',
-                'MATCH (n) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.be.empty();
-
-            done();
+                    done();
+                });
         });
 
         it('should error if an undefined substitution is used', function(done) {
-            expect(function() {
-                Neo4j.buildStatement('MATCH (${x}) RETURN n');
-            }).to.throw(Error);
-            done();
+            Neo4j.compose('MATCH (${x}) RETURN n', function(err) {
+                expect(err).to.be.ok();
+                done();
+            });
         });
 
         it('should error if undefined substitutions are used', function(done) {
-            expect(function() {
-                Neo4j.buildStatement('MATCH (${x}) RETURN ${y}');
-            }).to.throw(Error);
-            done();
+            Neo4j.compose('MATCH (${x}) RETURN ${y}', {}, {}, function(err) {
+                    expect(err).to.be.ok();
+                    done();
+            });
         });
 
         it('should add parameter object', function(done) {
-            var statement = Neo4j.buildStatement(
-                'MATCH (n {value: {value}) RETURN n', {}, { 'value': 'foo' });
-
-            expect(statement).to.have.property('statement',
-                'MATCH (n {value: {value}) RETURN n');
-            expect(statement).to.have.property('parameters');
-            expect(statement.parameters).to.have.property('value', 'foo');
-            done();
+            Neo4j.compose('MATCH (n {value: {value}) RETURN n', {},
+                { 'value': 'foo' }, function(err, statement) {
+                    expect(statement).to.have.property('statement',
+                        'MATCH (n {value: {value}) RETURN n');
+                    expect(statement).to.have.property('parameters');
+                    expect(statement.parameters).to.have.property('value',
+                        'foo');
+                    done();
+                }
+            );
         });
 
         it('should allow just parameters to be passed', function(done) {
-            var parameters = {'a': 'b'};
-            var statement = Neo4j.buildStatement('test', parameters);
-            expect(statement).to.have.property('statement', 'test');
-            expect(statement).to.have.property('parameters', parameters);
-            done();
+            var parameters = { 'a': 'b' };
+            Neo4j.compose('test', parameters, function(err, statement) {
+                expect(statement).to.have.property('statement', 'test');
+                expect(statement).to.have.property('parameters', parameters);
+                done();
+            });
         });
     });
 
-    describe('result mapper', function() {
+    describe('when mapping results', function() {
         var mapResults = Neo4j.__get__('mapResults');
 
         it('should map rows to columns', function(done) {
@@ -338,17 +205,61 @@ describe('Neo4j wrapper', function() {
             done();
         });
     });
-});
 
-describe('Escaping identifiers', function() {
+    describe('when escaping identifiers', function() {
 
-    it('Should handle complex strings', function(done) {
-        expect(Neo4j.escapeIdentifier('a_:b c\'d')).to.equal('`a_:b c\'d`');
-        done();
+        it('Should handle complex strings', function(done) {
+            expect(Neo4j.escape('a_:b c\'d')).to.equal('`a_:b c\'d`');
+            done();
+        });
+
+        it('Should escape backticks', function(done) {
+            expect(Neo4j.escape('a`b')).to.equal('`a``b`');
+            done();
+        });
     });
 
-    it('Should escape backticks', function(done) {
-        expect(Neo4j.escapeIdentifier('a`b')).to.equal('`a``b`');
-        done();
+    describe('when receiving results', function() {
+        var db;
+        var errors = [];
+        var uri = 'http://localhost/db/data/transaction/wrong/commit';
+
+        before(function(done) {
+            db = new Neo4j('http://localhost:7474');
+            done();
+        });
+
+        beforeEach(function(done) {
+            Neo4j.__set__({
+                'request': {
+                    'post': function(args, callback) {
+                        callback(null,
+                            {
+                                'body': {
+                                    'commit': uri,
+                                    'results': args,
+                                    'errors': errors,
+                                    'transaction': {
+                                        'expires': 'expiry'
+                                    }
+                                }
+                            }
+                        );
+                    }
+                },
+                'mapResults': function(results) { return results; }
+            });
+
+            done();
+        });
+
+        it('should handle an incorrect transaction ID', function(done) {
+            db.commit(1, function(err, results) {
+                expect(err).to.be.ok();
+                expect(results).to.be.empty();
+
+                done();
+            });
+        });
     });
 });
