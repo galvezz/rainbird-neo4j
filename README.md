@@ -81,6 +81,9 @@ Will pass the following statement object to Neo4J:
 }]
 ```
 
+**Warning:** _substitutions should be used with care as they can leave you open
+to injection attacks. Always be sure you're passing in known strings._
+
 ## Transactions
 
 Queries are always run within the context of a transaction. Where transactions
@@ -363,6 +366,9 @@ npm run-script functional-test
 The Docker instance can now be stopped and deleted if it's no longer needed.
 
 # Release Notes
+
+## v0.2.1
+  * [Misc] Add warning about substitutions and injection attacks.
 
 ## v0.2.0
 
